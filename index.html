@@ -483,21 +483,6 @@ try {
   if(FIREBASE_CONFIG.apiKey !== "YOUR_API_KEY") {
     firebase.initializeApp(FIREBASE_CONFIG);
     firebaseReady = true;
-    // Listen for auth state changes (handles redirect return on mobile)
-    firebase.auth().onAuthStateChanged(function(fbUser){
-      if(fbUser && !window._fbAuthHandled){
-        window._fbAuthHandled=true;
-        const name=fbUser.displayName||fbUser.email?.split('@')[0]||fbUser.phoneNumber?.replace('+972','0')||'User';
-        // Wait for DOM and app init
-        function tryLogin(){
-          if(typeof firebaseLoginUser==='function'){
-            firebaseLoginUser(name);
-            toast('ברוך הבא, '+name+'!');
-          } else { setTimeout(tryLogin,100); }
-        }
-        tryLogin();
-      }
-    });
   }
 } catch(e) { console.warn('Firebase init failed:', e); }
 </script>
@@ -2278,9 +2263,20 @@ function init(){
   document.getElementById('admin-login-btn').onclick=loginAdmin;
   document.getElementById('admin-reports-btn').onclick=showAdminReports;
   document.getElementById('admin-lb-config-btn').onclick=showAdminLBConfig;
-  // Auto-login from localStorage (Firebase redirect is handled by onAuthStateChanged)
+  // Auto-login
   const last=localStorage.getItem('pApp_last');
-  if(last&&getUser(last)){window._fbAuthHandled=true;login(last);document.getElementById('report-fab').style.display='flex';toggleAdminFab()}
+  if(last&&getUser(last)){
+    login(last);document.getElementById('report-fab').style.display='flex';toggleAdminFab();
+  } else if(firebaseReady){
+    // Check if returning from Google redirect (mobile)
+    firebase.auth().getRedirectResult().then(function(result){
+      if(result && result.user){
+        const name=result.user.displayName||result.user.email?.split('@')[0]||'User';
+        firebaseLoginUser(name);
+        toast('ברוך הבא, '+name+'!');
+      }
+    }).catch(function(err){ console.warn('Redirect auth:',err); });
+  }
   // Observer for lesson content population
   const obs=new MutationObserver(()=>populateVocabLesson());
   obs.observe(document.getElementById('lesson-content'),{childList:true});
