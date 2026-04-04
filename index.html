@@ -2267,16 +2267,23 @@ function init(){
   const last=localStorage.getItem('pApp_last');
   if(last&&getUser(last)){
     login(last);document.getElementById('report-fab').style.display='flex';toggleAdminFab();
-  }
-  // Backup: handle redirect result if popup fell back to redirect
-  if(firebaseReady && !last){
+  } else if(firebaseReady){
+    // Show loading state while checking Firebase redirect
+    const loginBtn=document.getElementById('google-login-btn');
+    const origText=loginBtn?.innerHTML;
+    if(loginBtn)loginBtn.innerHTML='<span style="font-size:14px">מתחבר...</span>';
     firebase.auth().getRedirectResult().then(function(result){
       if(result && result.user){
         const name=result.user.displayName||result.user.email?.split('@')[0]||'User';
         firebaseLoginUser(name);
         toast('ברוך הבא, '+name+'!');
+      } else {
+        if(loginBtn)loginBtn.innerHTML=origText;
       }
-    }).catch(function(err){ console.warn('Redirect auth:',err); });
+    }).catch(function(err){
+      console.warn('Redirect auth:',err);
+      if(loginBtn)loginBtn.innerHTML=origText;
+    });
   }
   // Observer for lesson content population
   const obs=new MutationObserver(()=>populateVocabLesson());
