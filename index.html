@@ -957,21 +957,21 @@ function googleLogin(){
   if(!firebaseReady){toast('Firebase לא מוגדר. הגדר את FIREBASE_CONFIG');return}
   const provider=new firebase.auth.GoogleAuthProvider();
   provider.setCustomParameters({prompt:'select_account'});
-  // Use redirect on mobile (popup fails on iOS/Android browsers)
-  const isMobile=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  if(isMobile){
-    firebase.auth().signInWithRedirect(provider);
-  } else {
-    firebase.auth().signInWithPopup(provider).then(result=>{
-      const name=result.user.displayName||result.user.email?.split('@')[0]||'User';
-      firebaseLoginUser(name);
-      toast('ברוך הבא, '+name+'!');
-    }).catch(err=>{
-      console.error('Google login error:',err);
-      if(err.code==='auth/popup-closed-by-user')return;
-      toast('שגיאה בהתחברות: '+err.message);
-    });
-  }
+  // Try popup first (works on most browsers including mobile)
+  firebase.auth().signInWithPopup(provider).then(result=>{
+    const name=result.user.displayName||result.user.email?.split('@')[0]||'User';
+    firebaseLoginUser(name);
+    toast('ברוך הבא, '+name+'!');
+  }).catch(err=>{
+    console.error('Google login error:',err);
+    if(err.code==='auth/popup-closed-by-user')return;
+    // If popup blocked on mobile, fall back to redirect
+    if(err.code==='auth/popup-blocked'||err.code==='auth/cancelled-popup-request'){
+      firebase.auth().signInWithRedirect(provider);
+    } else {
+      toast('שגיאה בהתחברות: '+(err.message||err.code));
+    }
+  });
 }
 
 function showPhoneLogin(){
@@ -2267,8 +2267,9 @@ function init(){
   const last=localStorage.getItem('pApp_last');
   if(last&&getUser(last)){
     login(last);document.getElementById('report-fab').style.display='flex';toggleAdminFab();
-  } else if(firebaseReady){
-    // Check if returning from Google redirect (mobile)
+  }
+  // Backup: handle redirect result if popup fell back to redirect
+  if(firebaseReady && !last){
     firebase.auth().getRedirectResult().then(function(result){
       if(result && result.user){
         const name=result.user.displayName||result.user.email?.split('@')[0]||'User';
