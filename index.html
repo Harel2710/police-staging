@@ -1571,14 +1571,10 @@ function loadGlobalOverrides(callback){
 function pushAllOverrides(){
   if(!user||!user.isAdmin){toast('רק אדמין יכול לבצע פעולה זו');return}
   if(!db){toast('שגיאה: אין חיבור לדאטאבייס');return}
-  const authUser=firebase.auth().currentUser;
-  if(!authUser){toast('שגיאה: לא מחובר ל-Firebase Auth');return}
-  console.log('Pushing overrides... uid:',authUser.uid,'isAdmin:',user.isAdmin);
   const o=getOverrides();
-  const payload={data:JSON.stringify(o),updated:Date.now(),updatedBy:authUser.uid};
-  db.collection('appConfig').doc('overrides').set(payload)
-    .then(()=>{toast('✓ כל העריכות הועלו לשרת');console.log('Push success!')})
-    .catch(e=>{toast('שגיאה בהעלאה: '+e.code+' - '+e.message);console.error('Push failed:',e)});
+  db.collection('appConfig').doc('overrides').set({data:JSON.stringify(o),updated:Date.now()})
+    .then(()=>toast('✓ כל העריכות הועלו לשרת'))
+    .catch(e=>toast('שגיאה: '+e.message));
 }
 function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
