@@ -551,7 +551,6 @@ try {
 Google
 </button>
 </div>
-<div style="margin-top:16px"><button id="admin-login-btn" class="btn btn-sm" style="background:transparent;color:var(--txtm);border:none;font-size:12px;text-decoration:underline;cursor:pointer">כניסת אדמין</button></div>
 </div>
 </div>
 
@@ -940,7 +939,8 @@ function syncUserToFirestore(u){
       lastActive:Date.now(),
       created:u.created||Date.now(),
       quizResults:u.quizResults||{},
-      classification:u.classification||null
+      classification:u.classification||null,
+      isAdmin:u.isAdmin||false
     };
     db.collection('users').doc(docId).set(doc,{merge:true}).then(()=>{
       console.log('Firestore synced:',u.name);
@@ -989,12 +989,11 @@ function mergeFirestoreUser(firestoreData,localUser){
   }
   if(firestoreData.totalTime>merged.totalTime)merged.totalTime=firestoreData.totalTime;
   if(firestoreData.classification&&!merged.classification)merged.classification=firestoreData.classification;
+  if(firestoreData.isAdmin)merged.isAdmin=true;
   return merged;
 }
 
 // ===== UTILITY =====
-const getRank=p=>{let r=RANKS[0];for(const x of RANKS)if(p>=x.min)r=x;return r};
-const getNext=p=>{for(const r of RANKS)if(p<r.min)return r;return null};
 const shuffle=a=>{const b=[...a];for(let i=b.length-1;i>0;i--){const j=0|Math.random()*(i+1);[b[i],b[j]]=[b[j],b[i]]}return b};
 const NO_TAB_SCREENS=['login-screen','quiz-screen','sim-screen','lesson-screen','results-screen','sim-results-screen','sim-review-screen','flashcard-screen'];
 const showScreen=id=>{document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));const el=document.getElementById(id);el.classList.add('active');el.scrollTo(0,0);window.scrollTo(0,0);const tb=document.getElementById('tab-bar');if(tb)tb.style.display=(!NO_TAB_SCREENS.includes(id)&&user)?'flex':'none'};
@@ -1099,19 +1098,6 @@ function enterApp(uid,displayName,email){
     toggleAdminFab();
   }
   toast('ברוך הבא, '+displayName+'!');
-}
-function loginAdmin(){
-  const pass=prompt('הזן סיסמת אדמין:');
-  if(!pass)return;
-  if(pass!==ADMIN_PASS){toast('סיסמה שגויה');return}
-  const uid='admin';
-  let u=getUser(uid);
-  if(!u){u=newUser('admin');u.isAdmin=true;u.uid=uid;saveUser(u)}
-  user=u;user.isAdmin=true;if(!user.quizResults)user.quizResults={};
-  user.lastActive=Date.now();saveUser(user);
-  localStorage.setItem('pApp_last',uid);showDash();toast('ברוך הבא, אדמין!');startTimeTracking();
-  document.getElementById('report-fab').style.display='flex';
-  toggleAdminFab();
 }
 function logout(){
   user=null;localStorage.removeItem('pApp_last');
@@ -2629,7 +2615,6 @@ function endFlashcards(){
 }
 
 // ===== ADMIN & REPORTS =====
-const ADMIN_PASS='David06012021';
 
 function getReports(){try{return JSON.parse(localStorage.getItem('pApp_reports'))||[]}catch{return[]}}
 function saveReports(r){localStorage.setItem('pApp_reports',JSON.stringify(r))}
@@ -2700,7 +2685,6 @@ function init(){
   document.getElementById('sim-heb').onclick=()=>startSim('hebrew');
   document.getElementById('sim-dpr').onclick=()=>startSim('dpr');
   // Admin
-  document.getElementById('admin-login-btn').onclick=loginAdmin;
   document.getElementById('admin-reports-btn').onclick=showAdminReports;
   document.getElementById('admin-lb-config-btn').onclick=showAdminLBConfig;
   // Auto-login: try localStorage first, then Firebase redirect
