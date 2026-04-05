@@ -610,6 +610,7 @@ Google
 <div class="action-card glass" id="lb-btn"><span class="action-icon">🏆</span><div style="flex:1"><span class="action-text">טבלת דירוג</span></div><span class="action-arrow">←</span></div>
 <div class="action-card glass" id="admin-reports-btn" style="display:none"><span class="action-icon">📋</span><div style="flex:1"><span class="action-text">פניות משתמשים</span></div><span class="action-arrow">←</span></div>
 <div class="action-card glass" id="admin-lb-config-btn" style="display:none"><span class="action-icon">⚙️</span><div style="flex:1"><span class="action-text">הגדרות דירוג</span></div><span class="action-arrow">←</span></div>
+<div class="action-card glass" id="admin-push-overrides-btn" style="display:none" onclick="pushAllOverrides()"><span class="action-icon">☁️</span><div style="flex:1"><span class="action-text">העלה עריכות לשרת</span></div><span class="action-arrow">←</span></div>
 <div class="action-card glass" id="logout-btn"><span class="action-icon">🚪</span><div style="flex:1"><span class="action-text">התנתק</span></div><span class="action-arrow">←</span></div>
 </div>
 </div>
@@ -1081,42 +1082,36 @@ function emailRegister(){
   });
 }
 function enterApp(uid,displayName,email){
-  // Load global overrides from Firestore (admin edits)
-  loadGlobalOverrides();
-  // Use uid as the unique storage key, displayName for display
-  let u=getUser(uid);
-  if(!u){
-    u=newUser(displayName);
+  // Load global overrides first, then proceed
+  loadGlobalOverrides(()=>{
+    let u=getUser(uid);
+    if(!u){
+      u=newUser(displayName);
+      u.uid=uid;
+      u.email=email||'';
+    }
+    u.name=displayName;
     u.uid=uid;
-    u.email=email||'';
-  }
-  u.name=displayName;
-  u.uid=uid;
-  if(email)u.email=email;
-  if(!u.quizResults)u.quizResults={};
-  u.lastActive=Date.now();
-  u.firebaseUid=uid;
-  // Merge from Firestore if available
-  if(db){
-    db.collection('users').doc(uid).get().then(doc=>{
-      if(doc.exists){u=mergeFirestoreUser(doc.data(),u);u.uid=uid;u.name=displayName;if(email)u.email=email}
+    if(email)u.email=email;
+    if(!u.quizResults)u.quizResults={};
+    u.lastActive=Date.now();
+    u.firebaseUid=uid;
+    const finishEntry=()=>{
       user=u;saveUser(user);
       localStorage.setItem('pApp_last',uid);showDash();startTimeTracking();
       document.getElementById('report-fab').style.display='flex';
       toggleAdminFab();
-    }).catch(()=>{
-      user=u;saveUser(user);
-      localStorage.setItem('pApp_last',uid);showDash();startTimeTracking();
-      document.getElementById('report-fab').style.display='flex';
-      toggleAdminFab();
-    });
-  } else {
-    user=u;saveUser(user);
-    localStorage.setItem('pApp_last',uid);showDash();startTimeTracking();
-    document.getElementById('report-fab').style.display='flex';
-    toggleAdminFab();
-  }
-  toast('ברוך הבא, '+displayName+'!');
+    };
+    if(db){
+      db.collection('users').doc(uid).get().then(doc=>{
+        if(doc.exists){u=mergeFirestoreUser(doc.data(),u);u.uid=uid;u.name=displayName;if(email)u.email=email}
+        finishEntry();
+      }).catch(()=>finishEntry());
+    } else {
+      finishEntry();
+    }
+    toast('ברוך הבא, '+displayName+'!');
+  });
 }
 function logout(){
   user=null;localStorage.removeItem('pApp_last');
@@ -1192,6 +1187,7 @@ function showMore(){
   document.getElementById('s-time').textContent=user.totalTime||0;
   document.getElementById('admin-reports-btn').style.display=user.isAdmin?'flex':'none';
   document.getElementById('admin-lb-config-btn').style.display=user.isAdmin?'flex':'none';
+  document.getElementById('admin-push-overrides-btn').style.display=user.isAdmin?'flex':'none';
   showScreen('more-screen');
 }
 
@@ -1557,14 +1553,23 @@ function saveOverrides(o){
       .catch(e=>console.warn('Overrides sync failed:',e));
   }
 }
-function loadGlobalOverrides(){
-  if(!db)return;
+function loadGlobalOverrides(callback){
+  if(!db){if(callback)callback();return}
   db.collection('appConfig').doc('overrides').get().then(doc=>{
     if(doc.exists&&doc.data().data){
       localStorage.setItem('pApp_overrides',doc.data().data);
       console.log('Global overrides loaded from Firestore');
     }
-  }).catch(e=>console.warn('Failed to load global overrides:',e));
+    if(callback)callback();
+  }).catch(e=>{console.warn('Failed to load global overrides:',e);if(callback)callback()});
+}
+// Admin: push all existing local overrides to Firestore
+function pushAllOverrides(){
+  if(!user||!user.isAdmin||!db){toast('רק אדמין יכול לבצע פעולה זו');return}
+  const o=getOverrides();
+  db.collection('appConfig').doc('overrides').set({data:JSON.stringify(o),updated:Date.now()},{merge:true})
+    .then(()=>toast('✓ כל העריכות הועלו לשרת'))
+    .catch(e=>toast('שגיאה: '+e.message));
 }
 function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
