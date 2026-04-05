@@ -252,6 +252,8 @@ body{font-family:var(--font);color:var(--txt);direction:rtl;-webkit-font-smoothi
 .question-card{padding:var(--sp-lg);margin-bottom:var(--sp-md);animation:scaleIn .25s ease}
 .question-text{font-size:16px;font-weight:600;line-height:1.65;text-align:center;white-space:pre-line}
 .options-container{display:flex;flex-direction:column;gap:var(--sp-sm)}
+.sim-nav-bar{display:flex;gap:var(--sp-md);justify-content:center;margin-top:var(--sp-lg);padding-bottom:var(--sp-xl)}
+.sim-nav-btn{flex:1;max-width:180px;padding:12px 16px;font-size:14px;font-weight:700}
 .option-btn{border:1.5px solid var(--brd);border-radius:var(--r-md);padding:14px;font-size:14px;font-weight:600;cursor:pointer;transition:var(--tr);text-align:right;display:flex;align-items:center;gap:var(--sp-md);animation:slideUp .25s ease backwards;font-family:var(--font);background:var(--card2);color:var(--txt);min-height:50px}
 .option-btn:nth-child(1){animation-delay:.03s}.option-btn:nth-child(2){animation-delay:.06s}
 .option-btn:nth-child(3){animation-delay:.09s}.option-btn:nth-child(4){animation-delay:.12s}
@@ -719,6 +721,10 @@ Google
 <div class="quiz-body hidden" id="sim-quiz-body">
 <div class="question-card glass"><p id="sim-q-text" class="question-text"></p></div>
 <div id="sim-opts" class="options-container"></div>
+<div class="sim-nav-bar">
+<button class="btn btn-secondary sim-nav-btn" id="sim-nav-back" onclick="simNavBack()" style="display:none">→ הקודם</button>
+<button class="btn btn-primary sim-nav-btn" id="sim-nav-skip" onclick="simNavNext()">דלג ←</button>
+</div>
 </div>
 </div>
 
@@ -949,7 +955,7 @@ let user=null,curStep=null,qList=[],qIdx=0,qCorrect=0,timerInt=null,elapsed=0;
 let sessionStart=Date.now(),timeTracker=null;
 // Boost/Sim state
 let boostTimer=null,boostRemaining=0,isBoostMode=false,boostCat='';
-let simTimer=null,simRemaining=0,isSimMode=false,simCat='',simAnswers=[];
+let simTimer=null,simRemaining=0,isSimMode=false,simCat='',simAnswers=[],simEndTime=0;
 
 // ===== STORAGE =====
 const getUsers=()=>{try{return JSON.parse(localStorage.getItem('pApp_u'))||{}}catch{return{}}};
@@ -1399,7 +1405,9 @@ function startPathSim(step){
   if(!qs.length){toast('אין שאלות זמינות');return}
   isSimMode=true;isBoostMode=false;simAdvancing=false;
   qList=qs;qIdx=0;qCorrect=0;elapsed=0;simAnswers=new Array(qs.length).fill(-1);
-  simRemaining=cat==='hebrew'?23*60:25*60;
+  const dur=cat==='hebrew'?23*60:25*60;
+  simRemaining=dur;
+  simEndTime=Date.now()+dur*1000;
   // Store the simKey so endSim knows where to save
   window._pathSimKey=simKeyPrefix+'_'+cat;
   document.getElementById('sim-selection').classList.add('hidden');
@@ -1409,11 +1417,11 @@ function startPathSim(step){
   document.getElementById('quit-sim-btn').onclick=()=>quitSim();
   clearAllTimers();
   timerInt=setInterval(()=>{
-    elapsed++;simRemaining--;
+    simRemaining=Math.max(0,Math.ceil((simEndTime-Date.now())/1000));
+    elapsed=dur-simRemaining;
     if(simRemaining<=0){clearAllTimers();endSim();return}
-    const hdr=document.getElementById('sim-header');
-    hdr.innerHTML=`<span class="timer-badge${simRemaining<=120?' warning':''}">⏱️ ${fmtTime(simRemaining)}</span> שאלה ${qIdx+1}/${qList.length}`;
-  },1000);
+    updateSimHeader();
+  },500);
   renderSimQ();
 }
 
@@ -2046,7 +2054,9 @@ function startSim(cat){
   if(!qs.length){toast('אין שאלות זמינות');return}
   isSimMode=true;isBoostMode=false;simAdvancing=false;
   qList=qs;qIdx=0;qCorrect=0;elapsed=0;simAnswers=new Array(qs.length).fill(-1);
-  simRemaining=cat==='hebrew'?23*60:25*60;
+  const dur=cat==='hebrew'?23*60:25*60;
+  simRemaining=dur;
+  simEndTime=Date.now()+dur*1000;
   document.getElementById('sim-selection').classList.add('hidden');
   document.getElementById('sim-quiz-body').classList.remove('hidden');
   showScreen('sim-screen');
@@ -2054,18 +2064,17 @@ function startSim(cat){
   document.getElementById('quit-sim-btn').onclick=()=>quitSim();
   clearAllTimers();
   timerInt=setInterval(()=>{
-    elapsed++;simRemaining--;
+    simRemaining=Math.max(0,Math.ceil((simEndTime-Date.now())/1000));
+    elapsed=dur-simRemaining;
     if(simRemaining<=0){clearAllTimers();endSim();return}
-    const hdr=document.getElementById('sim-header');
-    const total=qList.length;
-    hdr.innerHTML=`<span class="timer-badge${simRemaining<=120?' warning':''}">⏱️ ${fmtTime(simRemaining)}</span> שאלה ${qIdx+1}/${total}`;
-  },1000);
+    updateSimHeader();
+  },500);
   renderSimQ();
 }
 
 function renderSimQ(){
-  const q=qList[qIdx],total=qList.length;
-  document.getElementById('sim-header').innerHTML=`<span class="timer-badge${simRemaining<=120?' warning':''}">⏱️ ${fmtTime(simRemaining)}</span> שאלה ${qIdx+1}/${total}`;
+  const q=qList[qIdx];
+  updateSimHeader();
   if(q.visual){
     document.getElementById('sim-q-text').innerHTML=q.q+'<div class="visual-block">'+q.visual+'</div>';
   } else {
@@ -2073,8 +2082,9 @@ function renderSimQ(){
   }
   if(simCat==='dpr'){const _n=document.createElement('div');_n.className='dpr-note';_n.textContent='בפרק זה ניתן להשתמש בעט ובנייר טיוטה לביצוע רישומים נדרשים';document.getElementById('sim-q-text').appendChild(_n)}
   const c=document.getElementById('sim-opts');c.innerHTML='';
+  const selected=simAnswers[qIdx];
   q.o.forEach((opt,i)=>{
-    const btn=document.createElement('button');btn.className='option-btn';
+    const btn=document.createElement('button');btn.className='option-btn'+(i===selected?' selected':'');
     if(q.visualOpts){
       btn.innerHTML=`<span class="option-letter">${LETTERS[i]||i+1}</span><span class="visual-opt">${opt}</span>`;
     } else {
@@ -2083,27 +2093,44 @@ function renderSimQ(){
     btn.onclick=()=>handleSimAns(i);
     c.appendChild(btn);
   });
+  // Navigation buttons
+  document.getElementById('sim-nav-back').style.display=qIdx>0?'':'none';
+  document.getElementById('sim-nav-skip').textContent=qIdx<qList.length-1?'דלג ←':'סיים מבחן';
 }
 
-let simAdvancing=false;
 function handleSimAns(idx){
-  if(simAdvancing)return;
   simAnswers[qIdx]=idx;
   const btns=document.getElementById('sim-opts').querySelectorAll('.option-btn');
   btns.forEach(b=>b.classList.remove('selected'));
   btns[idx].classList.add('selected');
-  simAdvancing=true;
-  // Brief highlight then advance
-  setTimeout(()=>{
-    simAdvancing=false;
-    qIdx++;
-    if(qIdx>=qList.length){clearAllTimers();endSim()}
-    else renderSimQ();
-  },350);
+  updateSimHeader();
+}
+
+function simNavNext(){
+  if(qIdx>=qList.length-1){
+    const unanswered=simAnswers.filter(a=>a===-1).length;
+    const msg=unanswered>0?`יש ${unanswered} שאלות ללא מענה. לסיים?`:'לסיים את המבחן?';
+    if(confirm(msg)){clearAllTimers();endSim()}
+    return;
+  }
+  qIdx++;
+  renderSimQ();
+}
+function simNavBack(){
+  if(qIdx>0){qIdx--;renderSimQ()}
+}
+
+function updateSimHeader(){
+  const total=qList.length;
+  const answered=simAnswers.filter(a=>a!==-1).length;
+  document.getElementById('sim-header').innerHTML=`<span class="timer-badge${simRemaining<=120?' warning':''}">⏱️ ${fmtTime(simRemaining)}</span> שאלה ${qIdx+1}/${total} (${answered}/${total} נענו)`;
 }
 
 function quitSim(){
-  if(isSimMode&&confirm('הסימולציה תסתיים. להמשיך?')){clearAllTimers();endSim();return}
+  if(isSimMode){
+    if(confirm('לסיים את הסימולציה?')){clearAllTimers();endSim()}
+    return;
+  }
   showDash();
 }
 
