@@ -7,7 +7,41 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#111827">
+<link rel="manifest" href="manifest.json">
 <title>הכנה למבחני מיון - משטרת ישראל</title>
+<script>
+(function(){
+  const S=180,c=document.createElement('canvas');c.width=c.height=S;const x=c.getContext('2d');
+  // Background
+  const bg=x.createLinearGradient(0,0,S,S);bg.addColorStop(0,'#1e3a5f');bg.addColorStop(1,'#0f1d33');
+  x.fillStyle=bg;x.beginPath();x.roundRect(0,0,S,S,32);x.fill();
+  // Shield shape
+  x.save();x.translate(S/2,88);x.beginPath();
+  x.moveTo(0,-52);x.bezierCurveTo(28,-52,48,-44,54,-36);x.lineTo(54,10);
+  x.bezierCurveTo(54,36,30,54,0,64);x.bezierCurveTo(-30,54,-54,36,-54,10);
+  x.lineTo(-54,-36);x.bezierCurveTo(-48,-44,-28,-52,0,-52);x.closePath();
+  const sg=x.createLinearGradient(0,-52,0,64);sg.addColorStop(0,'#3b82f6');sg.addColorStop(1,'#1d4ed8');
+  x.fillStyle=sg;x.fill();
+  x.strokeStyle='#f59e0b';x.lineWidth=3;x.stroke();
+  // Inner shield
+  x.beginPath();x.moveTo(0,-40);x.bezierCurveTo(22,-40,38,-34,42,-28);x.lineTo(42,6);
+  x.bezierCurveTo(42,28,24,42,0,50);x.bezierCurveTo(-24,42,-42,28,-42,6);
+  x.lineTo(-42,-28);x.bezierCurveTo(-38,-34,-22,-40,0,-40);x.closePath();
+  x.strokeStyle='rgba(255,255,255,.25)';x.lineWidth=1.5;x.stroke();
+  // Star
+  x.fillStyle='#f59e0b';x.beginPath();
+  for(let i=0;i<5;i++){const a=Math.PI/2+i*Math.PI*2/5,b=a+Math.PI/5;
+    x.lineTo(Math.cos(-a)*22,Math.sin(-a)*22-2);x.lineTo(Math.cos(-b)*10,Math.sin(-b)*10-2)}
+  x.closePath();x.fill();
+  x.restore();
+  // Text
+  x.fillStyle='#f1f5f9';x.font='700 13px Rubik,sans-serif';x.textAlign='center';
+  x.fillText('הכנה למבחנים',S/2,164);
+  // Set icons
+  const url=c.toDataURL('image/png');
+  ['apple-touch-icon','icon'].forEach(r=>{const l=document.createElement('link');l.rel=r;l.href=url;document.head.appendChild(l)});
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">

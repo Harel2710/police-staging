@@ -1,0 +1,9 @@
+{
+  "name": "הכנה למבחני מיון - משטרת ישראל",
+  "short_name": "מבחן משטרה",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#111827",
+  "theme_color": "#111827",
+  "description": "אפליקציית הכנה למבחני עברית ודפ\"ר למשטרת ישראל"
+}
