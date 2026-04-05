@@ -1081,6 +1081,8 @@ function emailRegister(){
   });
 }
 function enterApp(uid,displayName,email){
+  // Load global overrides from Firestore (admin edits)
+  loadGlobalOverrides();
   // Use uid as the unique storage key, displayName for display
   let u=getUser(uid);
   if(!u){
@@ -1546,7 +1548,24 @@ function getLessonHTML(id){
 
 // ===== GET QUIZ DATA =====
 function getOverrides(){return JSON.parse(localStorage.getItem('pApp_overrides')||'{}')}
-function saveOverrides(o){localStorage.setItem('pApp_overrides',JSON.stringify(o))}
+function saveOverrides(o){
+  localStorage.setItem('pApp_overrides',JSON.stringify(o));
+  // Admin: sync overrides to Firestore for all users
+  if(user&&user.isAdmin&&db){
+    db.collection('appConfig').doc('overrides').set({data:JSON.stringify(o),updated:Date.now()},{merge:true})
+      .then(()=>console.log('Overrides synced to Firestore'))
+      .catch(e=>console.warn('Overrides sync failed:',e));
+  }
+}
+function loadGlobalOverrides(){
+  if(!db)return;
+  db.collection('appConfig').doc('overrides').get().then(doc=>{
+    if(doc.exists&&doc.data().data){
+      localStorage.setItem('pApp_overrides',doc.data().data);
+      console.log('Global overrides loaded from Firestore');
+    }
+  }).catch(e=>console.warn('Failed to load global overrides:',e));
+}
 function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
 function applyOverrides(arr){
