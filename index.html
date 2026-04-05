@@ -714,13 +714,19 @@ Google
 <!-- FLASHCARDS -->
 <div id="flashcard-screen" class="screen">
 <header class="screen-header"><button class="back-btn" onclick="endFlashcards()">→ חזרה</button><h2>🃏 כרטיסיות לימוד</h2></header>
-<div class="flashcard-area">
+<div id="fc-category-picker" class="flashcard-area" style="padding-top:32px">
+<div class="edit-section-title" style="margin-bottom:16px;font-size:15px">בחר קטגוריה לתרגול:</div>
+<div class="btn btn-primary" style="width:85%;max-width:320px;margin:6px auto;padding:14px" onclick="startFlashcardSession('words')">📖 מילים (<span id="fc-count-words">0</span>)</div>
+<div class="btn btn-primary" style="width:85%;max-width:320px;margin:6px auto;padding:14px" onclick="startFlashcardSession('expr')">💬 ביטויים (<span id="fc-count-expr">0</span>)</div>
+<div class="btn btn-primary" style="width:85%;max-width:320px;margin:6px auto;padding:14px" onclick="startFlashcardSession('all')">🎯 הכל (<span id="fc-count-all">0</span>)</div>
+</div>
+<div id="fc-session-area" class="flashcard-area" style="display:none">
 <div class="fc-progress"><div class="progress-bar"><div class="progress-fill" id="fc-prog"></div></div></div>
 <div class="flashcard-counter" id="fc-counter">1/86</div>
 <div class="flashcard-wrapper" id="fc-wrapper" onclick="flipCard()">
 <div class="flashcard-inner">
 <div class="flashcard-front"><div class="fc-word" id="fc-word"></div><div class="fc-hint">לחץ להפוך</div></div>
-<div class="flashcard-back"><div class="fc-label">משמעות:</div><div class="fc-meaning" id="fc-meaning"></div></div>
+<div class="flashcard-back"><div class="fc-label" id="fc-back-label">משמעות:</div><div class="fc-meaning" id="fc-meaning"></div></div>
 </div>
 </div>
 <div class="fc-actions">
@@ -802,9 +808,9 @@ Google
 
 // ===== LEARNING PATH =====
 const PATH=[
+  {id:'intro',type:'lesson',cat:'general',title:'מבוא - הכנה למבחנים',icon:'📋',desc:'מבנה המבחן, ציונים וטיפים'},
   {id:'level_sim_heb',type:'sim',cat:'general',title:'מבחן רמה - עברית',icon:'📝',desc:'סימולציה למיפוי רמתך בעברית',simCat:'hebrew',simKey:'level'},
   {id:'level_sim_dpr',type:'sim',cat:'general',title:'מבחן רמה - דפ"ר',icon:'📝',desc:'סימולציה למיפוי רמתך בדפ"ר',simCat:'dpr',simKey:'level'},
-  {id:'intro',type:'lesson',cat:'general',title:'מבוא - הכנה למבחנים',icon:'📋',desc:'מבנה המבחן, ציונים וטיפים'},
   {id:'vocab',type:'lesson',cat:'hebrew',title:'אוצר מילים ומילים דומות',icon:'📖',desc:'רשימת מילים, מילים דומות וביטויים'},
   {id:'heb_ex1',type:'quiz',cat:'hebrew',title:'תרגול עברית 1',icon:'✏️',desc:'אביון, אוושה, אצטבא, אשתקד, בגפו, בדיעבד',dataKey:'ex1'},
   {id:'heb_ex2',type:'quiz',cat:'hebrew',title:'תרגול עברית 2',icon:'✏️',desc:'גהר, בעתה, גוויה, גשמי, גילופין, דופי',dataKey:'ex2'},
@@ -818,7 +824,9 @@ const PATH=[
   {id:'word_match',type:'quiz',cat:'hebrew',title:'התאמת מילים להגדרות',icon:'🔗',desc:'28 שאלות התאמה',dataKey:'wordMatch'},
   {id:'opposites',type:'quiz',cat:'hebrew',title:'תרגול הפכים',icon:'🔄',desc:'23 זוגות הפכים',dataKey:'opposites'},
   {id:'comprehension',type:'quiz',cat:'hebrew',title:'הבנת הנקרא',icon:'📰',desc:'15 שאלות הבנה',dataKey:'comprehension'},
+  {id:'comprehension2',type:'quiz',cat:'hebrew',title:'הבנת הנקרא 2',icon:'📰',desc:'שאלות הבנה נוספות',dataKey:'comprehension2'},
   {id:'spelling',type:'quiz',cat:'hebrew',title:'שגיאות כתיב',icon:'🔍',desc:'תרגול איתור שגיאות כתיב',dataKey:'spelling'},
+  {id:'spelling2',type:'quiz',cat:'hebrew',title:'שגיאות כתיב 2',icon:'🔍',desc:'תרגול נוסף באיתור שגיאות',dataKey:'spelling2'},
   {id:'instr_learn',type:'lesson',cat:'dpr',title:'מילוי הוראות - הסבר',icon:'📋',desc:'5 סוגי שאלות, טיפים ודוגמאות'},
   {id:'instr_ex1',type:'quiz',cat:'dpr',title:'תרגול מילוי הוראות 1',icon:'✏️',desc:'שאלות מילוי הוראות',dataKey:'instr1'},
   {id:'dict_ex',type:'quiz',cat:'dpr',title:'תרגול מילון והוראות',icon:'📖',desc:'שאלות סדר אלפביתי והוראות',dataKey:'dictEx'},
@@ -863,8 +871,8 @@ const ANALYTICS_GROUPS=[
     {name:'אוצר מילים',keys:['ex1','ex2','ex3','ex4','ex5','ex6']},
     {name:'ביטויים',keys:['expr1','expr2']},
     {name:'הפכים והתאמות',keys:['opposites','wordMatch']},
-    {name:'הבנת הנקרא',keys:['comprehension']},
-    {name:'כתיב',keys:['spelling']}
+    {name:'הבנת הנקרא',keys:['comprehension','comprehension2']},
+    {name:'כתיב',keys:['spelling','spelling2']}
   ]},
   {group:'דפ"ר',icon:'📐',color:'#2dd4bf',cats:[
     {name:'מילוי הוראות',keys:['instr1','dictEx','dictPractice','compass','instrTest']},
@@ -1248,8 +1256,8 @@ function renderPath(){
   const NODE_ICONS={
     'intro':'📋','vocab':'📖','heb_ex1':'✍️','heb_ex2':'📝','heb_ex3':'🔤',
     'heb_ex4':'💬','heb_ex5':'📚','heb_ex6':'🧠','expr_learn':'💡','expr_ex1':'🎯',
-    'expr_ex2':'🎲','word_match':'🔗','opposites':'🔄','comprehension':'📰',
-    'spelling':'🔍','instr_learn':'📐','instr_ex1':'⚙️','dict_ex':'📓','dict_practice':'🔤',
+    'expr_ex2':'🎲','word_match':'🔗','opposites':'🔄','comprehension':'📰','comprehension2':'📰',
+    'spelling':'🔍','spelling2':'🔍','instr_learn':'📐','instr_ex1':'⚙️','dict_ex':'📓','dict_practice':'🔤',
     'compass_ex':'🧭','instr_test':'📝','seq_learn':'🔢','seq_ex3':'🧮','seq_ex4':'📊',
     'seq_ex5':'🎯','seq_ex6':'💡','seq_ex7':'⚡','seq_ex8':'🏅','shapes_learn':'🔷',
     'shapes_ex':'🔶','shapes_ex2':'🔷','shapes_ex3':'🔶',
@@ -1396,12 +1404,36 @@ function getIntroHTML(){
   const tips=introOvr.tips||'המבחן ממוחשב. לפני כל חלק יש הסבר ודוגמאות (לא מוגבלים בזמן) - קרא בעיון!\nשים לב לניסוח השאלה - לפעמים הוא מבלבל בכוונה\nאל תתעכב על שאלה - דלג והמשך\nהשאלות מסודרות מקל לקשה\nהמבחן מוגבל בזמן - סביר שלא תספיק הכל, אל תילחץ';
   let tableRows=rows.map(r=>`<tr><td>${r.role}</td><td>${r.heb}</td><td>${r.dpr}</td></tr>`).join('');
   let tipsHTML=tips.split('\n').filter(t=>t.trim()).map(t=>`<li>${t.trim()}</li>`).join('');
+  const lvlRows=LEVELS.map(l=>`<tr><td>${l.i} ${l.n}</td><td>${l.lv}</td><td>${l.min.toLocaleString()}</td></tr>`).join('');
   return `<div class="lesson-card glass"><h3>ברוכים הבאים!</h3>
-<p>לומדה זו תסייע לך להתכונן למבחני הדפ"ר והעברית במסגרת הליכי המיון למשטרת ישראל.</p>
-<p><strong>מבנה המבחנים:</strong></p>
-<ul><li><strong>מבחן עברית</strong> - אוצר מילים, כתיב, הבנת הנקרא, השלמת משפטים (23 דקות, 33 שאלות)</li>
-<li><strong>מבחן דפ"ר</strong> - מילוי הוראות, סדרות מספריות, צורות</li></ul></div>
-<div class="lesson-card glass"><h3>שיטת חישוב הציון</h3>
+<p>לומדה זו תסייע לך להתכונן למבחני הדפ"ר והעברית במסגרת הליכי המיון למשטרת ישראל.</p></div>
+<div class="lesson-card glass"><h3>📚 מסלול הלמידה</h3>
+<p>המסלול בנוי משלבים מסודרים שילוו אותך מהבסיס ועד לשליטה מלאה:</p>
+<ol>
+<li><strong>מבוא</strong> - ההסבר שאתה קורא עכשיו</li>
+<li><strong>מבחן רמה</strong> - סימולציה בעברית ובדפ"ר למיפוי הרמה הנוכחית שלך</li>
+<li><strong>מסלול עברית</strong> - אוצר מילים, ביטויים, מילים דומות, הפכים, הבנת הנקרא וכתיב</li>
+<li><strong>מסלול דפ"ר</strong> - מילוי הוראות, מילון, מצפן, סדרות וצורות</li>
+<li><strong>מבחן סיום</strong> - סימולציה מסכמת בעברית ובדפ"ר למדידת ההתקדמות</li>
+<li><strong>סיכום</strong> - טיפים אחרונים לקראת יום המבחן</li>
+</ol>
+<div class="tip">מסלולי העברית והדפ"ר מתקדמים במקביל - תוכל ללמוד בכל סדר שתרצה!</div></div>
+<div class="lesson-card glass"><h3>⭐ שיטת הניקוד</h3>
+<p>הניקוד באפליקציה מבוסס על <strong>מעורבות ותרגול</strong> - ככל שתתרגל יותר, תצבור יותר נקודות:</p>
+<ul>
+<li><strong>תרגול (קוויז)</strong> - 30 נקודות + בונוס זמן</li>
+<li><strong>תרגול מהיר (בוסט)</strong> - 25 נקודות + 30 נקודות בסיס + בונוס זמן</li>
+<li><strong>כרטיסיות לימוד</strong> - 15 נקודות לסשן</li>
+<li><strong>סימולציה</strong> - 35 נקודות + בונוס זמן</li>
+</ul>
+<div class="tip">הניקוד מעודד תרגול עקבי - אין עונש על טעויות, רק תגמול על מאמץ!</div></div>
+<div class="lesson-card glass"><h3>🏆 10 רמות</h3>
+<p>ככל שתצבור נקודות, תעלה ברמות:</p>
+<table><tr><th>רמה</th><th>דרגה</th><th>נקודות נדרשות</th></tr>${lvlRows}</table></div>
+<div class="lesson-card glass"><h3>מבנה המבחנים</h3>
+<p><strong>מבחן עברית</strong> - אוצר מילים, כתיב, הבנת הנקרא, השלמת משפטים (23 דקות, 33 שאלות)</p>
+<p><strong>מבחן דפ"ר</strong> - מילוי הוראות, סדרות מספריות, צורות</p></div>
+<div class="lesson-card glass"><h3>שיטת חישוב הציון במבחן</h3>
 <p>טווח הציונים: 1-8</p>
 <div class="tip"><strong>עברית:</strong> תשובה שגויה לא מורידה ניקוד. אם אתה לא בטוח - <strong>נחש!</strong></div>
 <div class="tip"><strong>דפ"ר:</strong> תשובה שגויה מורידה כ-1/4 נקודה. אם אתה לא בטוח - <strong>אל תענה.</strong> אם צמצמת ל-2 אפשרויות - כדאי לנחש.</div>
@@ -1543,7 +1575,9 @@ function getQuizData(key){
     if(key==='wordMatch')raw=HEBREW_DATA.wordMatch;
     if(key==='opposites')raw=HEBREW_DATA.opposites;
     if(key==='comprehension')raw=HEBREW_DATA.comprehension;
+    if(key==='comprehension2')raw=HEBREW_DATA.comprehension2;
     if(key==='spelling')raw=HEBREW_DATA.spelling;
+    if(key==='spelling2')raw=HEBREW_DATA.spelling2;
   }
   if(!raw&&typeof DPR_DATA!=='undefined'){
     if(key==='instr1')raw=DPR_DATA.instructions?.ex1;
@@ -1576,7 +1610,7 @@ function getQuizData(key){
 function getBoostQuestions(cat){
   const all=[];
   if(cat==='hebrew'){
-    ['ex1','ex2','ex3','ex4','ex5','ex6','expr1','expr2','wordMatch','opposites','comprehension','spelling'].forEach(k=>{const d=getQuizData(k);if(d)all.push(...d)});
+    ['ex1','ex2','ex3','ex4','ex5','ex6','expr1','expr2','wordMatch','opposites','comprehension','comprehension2','spelling','spelling2'].forEach(k=>{const d=getQuizData(k);if(d)all.push(...d)});
   }else{
     ['instr1','dictEx','dictPractice','compass','instrTest','seq3','seq4','seq5','seq6','seq7','seq8','shapes','shapes2','shapes3'].forEach(k=>{const d=getQuizData(k);if(d)all.push(...d)});
   }
@@ -1587,7 +1621,7 @@ function getSimQuestions(cat){
   const all=[];
   const count=cat==='hebrew'?33:30;
   if(cat==='hebrew'){
-    ['ex1','ex2','ex3','ex4','ex5','ex6','expr1','expr2','wordMatch','opposites','comprehension','spelling'].forEach(k=>{const d=getQuizData(k);if(d)all.push(...d)});
+    ['ex1','ex2','ex3','ex4','ex5','ex6','expr1','expr2','wordMatch','opposites','comprehension','comprehension2','spelling','spelling2'].forEach(k=>{const d=getQuizData(k);if(d)all.push(...d)});
   }else{
     ['instr1','dictEx','dictPractice','compass','instrTest','seq3','seq4','seq5','seq6','seq7','seq8','shapes','shapes2','shapes3'].forEach(k=>{const d=getQuizData(k);if(d)all.push(...d)});
   }
@@ -2202,8 +2236,8 @@ function findQuestionCat(q){
   const hebKeys=['ex1','ex2','ex3','ex4','ex5','ex6'];
   const exprKeys=['expr1','expr2'];
   const matchKeys=['wordMatch','opposites'];
-  const comprKeys=['comprehension'];
-  const spellKeys=['spelling'];
+  const comprKeys=['comprehension','comprehension2'];
+  const spellKeys=['spelling','spelling2'];
   const instrKeys=['instr1','dictEx','dictPractice','compass','instrTest'];
   const seqKeys=['seq3','seq4','seq5','seq6','seq7','seq8'];
   for(const k of hebKeys){const d=getQuizData(k);if(d&&d.some(x=>x.q===q.q))return 'אוצר מילים'}
@@ -2302,7 +2336,10 @@ function showAnalytics(){
     html+=`<div class="analytics-extra-card glass"><div class="analytics-extra-title">📊 תרגול נוסף</div>`;
     extraData.forEach(e=>{
       if(e.pct===null)return;
+      const isFC=e.name==='כרטיסיות לימוד';
+      const detailTxt=isFC?`ידעתי ${e.correct} מתוך ${e.total}`:`${e.correct}/${e.total} תשובות נכונות`;
       html+=`<div class="analytics-topic"><div class="analytics-topic-top"><span class="analytics-topic-name">${e.name}</span><span class="analytics-topic-score" style="color:${numColor(e.pct)}">${e.pct}</span></div>`;
+      html+=`<div style="font-size:.75rem;color:var(--txtm);margin:-2px 0 4px">${detailTxt}</div>`;
       html+=`<div class="analytics-topic-bar"><div class="analytics-topic-fill ${colorFor(e.pct)}" style="width:${e.pct}%"></div></div></div>`;
     });
     html+=`</div>`;
@@ -2439,6 +2476,16 @@ function openAdminEdit(){
     html+=`<button class="edit-delete-btn" onclick="deleteAdminQuestion()">🗑️ מחק שאלה זו לצמיתות</button>`;
     body.innerHTML=html;
     saveBtn.style.display='';
+  } else if(sid==='flashcard-screen'&&fcCards.length>0&&fcIdx<fcCards.length){
+    adminEditMode='flashcard';
+    const card=fcCards[fcIdx];
+    const srcLabel=card._fcSrc==='expr'?'ביטוי':'מילה';
+    let html=`<div class="edit-section-title">עריכת כרטיסיית ${srcLabel}</div>`;
+    html+=`<div class="edit-field"><label>${srcLabel}</label><input type="text" id="edit-fc-word" value="${escHtml(card.word)}"></div>`;
+    html+=`<div class="edit-field"><label>משמעות / פירוש</label><input type="text" id="edit-fc-meaning" value="${escHtml(card.meaning)}"></div>`;
+    html+=`<button class="edit-delete-btn" onclick="deleteFlashcard()">🗑️ מחק כרטיסייה זו</button>`;
+    body.innerHTML=html;
+    saveBtn.style.display='';
   } else {
     body.innerHTML=`<div class="edit-no-context">אין תוכן לעריכה במסך הזה.<br><br>💡 היכנס לתרגול או סימולציה<br>ולחץ ✏️ כדי לערוך את השאלה הנוכחית.</div>`;
     saveBtn.style.display='none';
@@ -2512,6 +2559,24 @@ function saveAdminEdit(){
     return;
   }
 
+  if(adminEditMode==='flashcard'){
+    const card=fcCards[fcIdx];
+    if(!card)return;
+    const oKey=card._fcSrc+':'+card._fcIdx;
+    const w=document.getElementById('edit-fc-word').value.trim();
+    const m=document.getElementById('edit-fc-meaning').value.trim();
+    if(w&&m){
+      if(!ovr[oKey])ovr[oKey]={};
+      ovr[oKey].word=w;ovr[oKey].meaning=m;
+      saveOverrides(ovr);
+      card.word=w;card.meaning=m;
+      renderFlashcard();
+    }
+    closeAdminEdit();
+    toast('✓ הכרטיסייה עודכנה');
+    return;
+  }
+
   // Original question editing logic
   if(!editingQuestion||editingQuestion.srcKey===undefined||editingQuestion.srcIdx===undefined){toast('אין שאלה לשמירה');return}
   const oKey=editingQuestion.srcKey+':'+editingQuestion.srcIdx;
@@ -2570,14 +2635,67 @@ function deleteAdminQuestion(){
   toast('✓ השאלה נמחקה');
 }
 
+function deleteFlashcard(){
+  if(!fcCards[fcIdx])return;
+  if(!confirm('למחוק כרטיסייה זו? לא תופיע יותר.'))return;
+  const card=fcCards[fcIdx];
+  const ovr=getOverrides();
+  ovr[card._fcSrc+':'+card._fcIdx]={deleted:true};
+  saveOverrides(ovr);
+  fcCards.splice(fcIdx,1);
+  if(fcIdx>=fcCards.length)fcIdx=Math.max(0,fcCards.length-1);
+  closeAdminEdit();
+  if(fcCards.length===0){toast('כל הכרטיסיות נמחקו');showDash();return}
+  renderFlashcard();
+  toast('✓ הכרטיסייה נמחקה');
+}
+
 // ===== FLASHCARDS =====
-let fcCards=[],fcIdx=0,fcKnown=0,fcUnknown=0;
+let fcCards=[],fcIdx=0,fcKnown=0,fcUnknown=0,fcCategory='all';
+
+function getFcWords(){
+  const ovr=getOverrides();
+  return (HEBREW_DATA.vocabulary||[]).map((w,i)=>{
+    const k='vocab:'+i,o=ovr[k];
+    if(o&&o.deleted)return null;
+    const c={word:w.word,meaning:w.meaning,_fcSrc:'vocab',_fcIdx:i};
+    if(o){if(o.word)c.word=o.word;if(o.meaning)c.meaning=o.meaning}
+    return c;
+  }).filter(Boolean);
+}
+function getFcExpr(){
+  const ovr=getOverrides();
+  return (HEBREW_DATA.expressions||[]).map((e,i)=>{
+    const k='expr:'+i,o=ovr[k];
+    if(o&&o.deleted)return null;
+    const c={word:e.expr,meaning:e.meaning,_fcSrc:'expr',_fcIdx:i};
+    if(o){if(o.word)c.word=o.word;if(o.meaning)c.meaning=o.meaning}
+    return c;
+  }).filter(Boolean);
+}
 
 function startFlashcards(){
-  if(typeof HEBREW_DATA==='undefined'||!HEBREW_DATA.vocabulary||!HEBREW_DATA.vocabulary.length){toast('אין נתוני מילים');return}
-  fcCards=shuffle([...HEBREW_DATA.vocabulary]);
-  fcIdx=0;fcKnown=0;fcUnknown=0;
+  if(typeof HEBREW_DATA==='undefined'){toast('אין נתונים');return}
+  const words=getFcWords(),expr=getFcExpr();
+  document.getElementById('fc-count-words').textContent=words.length;
+  document.getElementById('fc-count-expr').textContent=expr.length;
+  document.getElementById('fc-count-all').textContent=words.length+expr.length;
+  document.getElementById('fc-category-picker').style.display='';
+  document.getElementById('fc-session-area').style.display='none';
   showScreen('flashcard-screen');
+}
+
+function startFlashcardSession(cat){
+  fcCategory=cat;
+  let cards=[];
+  if(cat==='words')cards=getFcWords();
+  else if(cat==='expr')cards=getFcExpr();
+  else cards=[...getFcWords(),...getFcExpr()];
+  if(!cards.length){toast('אין כרטיסיות בקטגוריה זו');return}
+  fcCards=shuffle(cards);
+  fcIdx=0;fcKnown=0;fcUnknown=0;
+  document.getElementById('fc-category-picker').style.display='none';
+  document.getElementById('fc-session-area').style.display='';
   renderFlashcard();
 }
 
@@ -2586,6 +2704,7 @@ function renderFlashcard(){
   const card=fcCards[fcIdx];
   document.getElementById('fc-word').textContent=card.word;
   document.getElementById('fc-meaning').textContent=card.meaning;
+  document.getElementById('fc-back-label').textContent=card._fcSrc==='expr'?'פירוש:':'משמעות:';
   document.getElementById('fc-counter').textContent=`${fcIdx+1}/${fcCards.length}`;
   document.getElementById('fc-prog').style.width=(fcIdx/fcCards.length*100)+'%';
   document.getElementById('fc-wrapper').classList.remove('flipped');
@@ -2815,6 +2934,55 @@ const HEBREW_DATA = {
     {word: 'שככה', meaning: 'נרגע'},
     {word: 'טופינים', meaning: 'עוגיות'},
     {word: 'תורפה', meaning: 'חולשה, רפיון'},
+    {word: 'אוטונומיה', meaning: 'עצמאות, שלטון עצמי'},
+    {word: 'אופורטוניסט', meaning: 'מי שמנצל הזדמנויות לטובתו'},
+    {word: 'אינהרנטי', meaning: 'טבוע, מובנה, שטמון בעצם הדבר'},
+    {word: 'אירוניה', meaning: 'לגלוג סמוי, אמירה שמשמעותה הפוכה'},
+    {word: 'אלטרואיזם', meaning: 'נדיבות, דאגה לזולת ללא תמורה'},
+    {word: 'אמביוולנטיות', meaning: 'דו-ערכיות, רגשות מנוגדים בו-זמנית'},
+    {word: 'אמפתיה', meaning: 'הזדהות רגשית עם הזולת'},
+    {word: 'אנוכיות', meaning: 'דאגה לעצמו בלבד, אגואיזם'},
+    {word: 'ארכאי', meaning: 'עתיק, מיושן'},
+    {word: 'בוטה', meaning: 'גס, ישיר בצורה פוגענית'},
+    {word: 'בלתי הפיך', meaning: 'שאי אפשר להחזירו למצבו הקודם'},
+    {word: 'גינוי', meaning: 'ביקורת חריפה, הבעת סלידה'},
+    {word: 'דביקות', meaning: 'הידבקות, התמסרות עזה'},
+    {word: 'דוגמטי', meaning: 'נוקשה בדעותיו, אינו מוכן לשנות עמדה'},
+    {word: 'הגמוניה', meaning: 'שליטה, עליונות של גורם אחד'},
+    {word: 'הדרה', meaning: 'הוצאה מהכלל, הרחקה מקבוצה'},
+    {word: 'היבריס', meaning: 'יהירות, גאווה מופרזת'},
+    {word: 'הסתייגות', meaning: 'שמירת מרחק, אי-הסכמה חלקית'},
+    {word: 'זוטות', meaning: 'דברים קטנים וחסרי חשיבות'},
+    {word: 'חדגוני', meaning: 'משעמם, חסר גיוון'},
+    {word: 'חריגה', meaning: 'סטייה מהנורמה או מהמותר'},
+    {word: 'טוטלי', meaning: 'מוחלט, כולל, שלם'},
+    {word: 'יומרני', meaning: 'שואף גבוה מדי, מתיימר'},
+    {word: 'כפייתי', meaning: 'בעל דחף שאינו ניתן לשליטה'},
+    {word: 'לגיטימי', meaning: 'חוקי, מוצדק, מקובל'},
+    {word: 'לקוני', meaning: 'תמציתי, קצר ומדויק בדיבור'},
+    {word: 'מודחק', meaning: 'שנדחק מהתודעה, שהוסתר מהמודעות'},
+    {word: 'מופשט', meaning: 'שאינו מוחשי, תיאורטי'},
+    {word: 'מיתוס', meaning: 'אגדה, סיפור שאינו בהכרח אמיתי'},
+    {word: 'ניהיליזם', meaning: 'שלילת כל ערך ומשמעות'},
+    {word: 'ניכור', meaning: 'תחושת זרות וריחוק'},
+    {word: 'סובלנות', meaning: 'סבלנות כלפי דעות ואמונות שונות'},
+    {word: 'סטיגמה', meaning: 'כתם, תווית שלילית חברתית'},
+    {word: 'סינרגיה', meaning: 'שיתוף פעולה שתוצאתו גדולה מסכום חלקיו'},
+    {word: 'עמימות', meaning: 'חוסר בהירות, אי-ודאות'},
+    {word: 'פאתוס', meaning: 'רגש עמוק, התרגשות'},
+    {word: 'פדנטי', meaning: 'קפדן יתר על פרטים זניחים'},
+    {word: 'פופוליזם', meaning: 'פנייה לרגשות ההמון לשם השגת כוח'},
+    {word: 'פלורליזם', meaning: 'ריבוי דעות וגישות בחברה'},
+    {word: 'פרדוקס', meaning: 'סתירה לכאורה, היגד שנראה בלתי אפשרי'},
+    {word: 'פרגמטי', meaning: 'מעשי, תכליתי'},
+    {word: 'צביעות', meaning: 'העמדת פנים של מוסר תוך התנהגות הפוכה'},
+    {word: 'קונצנזוס', meaning: 'הסכמה רחבה, תמימות דעים'},
+    {word: 'רטרוספקטיבי', meaning: 'מבט לאחור, בדיעבד'},
+    {word: 'רלוונטי', meaning: 'שייך לעניין, נוגע לדבר'},
+    {word: 'שגרתי', meaning: 'רגיל, חוזר על עצמו, יומיומי'},
+    {word: 'שוביניזם', meaning: 'לאומנות קיצונית, תחושת עליונות'},
+    {word: 'תעמולה', meaning: 'הפצת מידע מגמתי להשפעה על דעת הקהל'},
+    {word: 'תקדים', meaning: 'מקרה קודם המשמש דוגמה או בסיס להחלטה'},
   ],
 
   // ===== Section 1b: Similar Words (~20 pairs) =====
@@ -3202,6 +3370,62 @@ const HEBREW_DATA = {
     {q: 'איזו מילה כתובה בכתיב שגוי?\n"האישה היתה בהכרה כשנמצאה"', o: ['היתה', 'בהכרה', 'כשנמצאה', 'האישה'], a: 0, e: 'הכתיב הנכון: הייתה (לא היתה)'},
     {q: 'איזו מילה כתובה בכתיב שגוי?\n"השוטרים חיפשו את החפק ברחבי העיר"', o: ['חיפשו', 'החפק', 'ברחבי', 'העיר'], a: 1, e: 'הכתיב הנכון: החפץ (לא החפק)'},
     {q: 'איזו מילה כתובה בכתיב שגוי?\n"יש סכוי קלוש למצוא את הנעדרת"', o: ['סכוי', 'קלוש', 'הנעדרת', 'למצוא'], a: 0, e: 'הכתיב הנכון: סיכוי (לא סכוי)'},
+  ],
+
+  // ===== Section 15: Comprehension 2 =====
+  comprehension2: [
+    {q: 'השופט גזר על הנאשם עונש מאסר על תנאי. מה המשמעות?', o: ['הנאשם ישב בכלא מיד', 'הנאשם ייכנס לכלא רק אם יעבור עבירה נוספת', 'הנאשם זוכה מכל אשמה', 'השופט החליט לשחרר אותו'], a: 1, e: 'מאסר על תנאי = עונש שמופעל רק אם הנאשם יעבור עבירה נוספת'},
+    {q: 'הממשלה הטילה מגבלות על ייבוא מוצרים מחו"ל. מה המשמעות?', o: ['עודדה ייבוא', 'הגבילה את כניסת מוצרים מחו"ל', 'אסרה ייצוא', 'ביטלה מכסים'], a: 1, e: 'הטילה מגבלות = הגבילה, צמצמה'},
+    {q: 'העד מסר עדות מפלילה נגד החשוד. מה המשמעות?', o: ['העד הגן על החשוד', 'העד סיפר דברים שמראים שהחשוד אשם', 'העד שיקר בבית המשפט', 'העד סירב להעיד'], a: 1, e: 'עדות מפלילה = עדות שמצביעה על אשמת החשוד'},
+    {q: 'הוועדה החליטה לדחות את הדיון בנושא למועד בלתי ידוע. מה המשמעות?', o: ['הוועדה דנה בנושא וסיימה', 'הוועדה דחתה את הנושא ללא מועד חדש', 'הוועדה אישרה את ההצעה', 'הוועדה ביטלה את ההצעה'], a: 1, e: 'דחתה למועד בלתי ידוע = עיכבה את הדיון ללא תאריך חדש'},
+    {q: 'ראש העיר נקט בצעדים דרסטיים כדי להתמודד עם משבר התחבורה. מה המשמעות?', o: ['לא עשה דבר', 'נקט פעולות קיצוניות ונחרצות', 'ביקש עזרה מהממשלה', 'התפטר מתפקידו'], a: 1, e: 'צעדים דרסטיים = פעולות קיצוניות ונחרצות'},
+    {q: 'הארגון פועל תחת חסות האו"ם. מה המשמעות?', o: ['הארגון מתנגד לאו"ם', 'הארגון פועל בהגנה ובתמיכה של האו"ם', 'הארגון הוא חלק מהאו"ם', 'הארגון מתחרה באו"ם'], a: 1, e: 'תחת חסות = בהגנה ותמיכה של'},
+    {q: 'התביעה ביקשה להחמיר בעונשו של הנאשם לאור עברו הפלילי. מה המשמעות?', o: ['לזכות אותו', 'להקל בעונש', 'להגדיל את העונש בגלל הרשעות קודמות', 'לשחרר אותו בערבות'], a: 2, e: 'להחמיר בעונש לאור עבר פלילי = לתת עונש חמור יותר בגלל הרשעות קודמות'},
+    {q: 'המשטרה פרסמה אזהרה בדבר פעילות של רמאים המתחזים לנציגי בנק. מה המשמעות?', o: ['המשטרה עצרה רמאים', 'המשטרה הזהירה את הציבור מפני נוכלים שמעמידים פנים שהם מהבנק', 'המשטרה סגרה את הבנק', 'המשטרה חקרה את הבנק'], a: 1, e: 'מתחזים = מעמידים פנים, אזהרה בדבר = הזהרה לגבי'},
+    {q: 'השר הנחה את הגורמים המוסמכים לפעול בהתאם לנוהל. מה המשמעות?', o: ['השר ביטל את הנוהל', 'השר הורה לגורמים המתאימים לפעול לפי הכללים', 'השר פיטר את הגורמים', 'השר שינה את הנוהל'], a: 1, e: 'הנחה = הורה, גורמים מוסמכים = בעלי סמכות מתאימה'},
+    {q: 'החוק מחייב דיווח מידי על כל אירוע חריג. מה המשמעות?', o: ['החוק מציע לדווח', 'החוק דורש דיווח מיידי על כל מקרה יוצא דופן', 'החוק אוסר דיווח', 'החוק מאפשר דיווח בכל זמן'], a: 1, e: 'מחייב = דורש, דיווח מידי = דיווח מיידי, אירוע חריג = מקרה יוצא דופן'},
+    {q: 'הנהג הסיח את דעתו מהכביש ונגרמה תאונה. מה המשמעות?', o: ['הנהג היה מרוכז', 'הנהג הפסיק לשים לב לכביש ובגלל זה הייתה תאונה', 'הנהג התכוון לגרום לתאונה', 'הנהג ברח מהתאונה'], a: 1, e: 'הסיח את דעתו = הפסיק לשים לב, לא התרכז'},
+    {q: 'בית המשפט הורה על מעצר עד תום ההליכים. מה המשמעות?', o: ['שוחרר בערבות', 'יישאר במעצר עד סוף המשפט', 'זוכה', 'נידון לקנס'], a: 1, e: 'מעצר עד תום ההליכים = נשאר כלוא עד שהמשפט יסתיים'},
+    {q: 'הפקח הטיל קנס על בעל העסק בשל הפרת תנאי הרישיון. מה המשמעות?', o: ['נתן פרס לבעל העסק', 'חידש לו את הרישיון', 'קנס אותו כי הפר את תנאי הרישיון שלו', 'סגר את העסק'], a: 2, e: 'הטיל קנס = ענש בכסף, הפרת תנאים = אי-עמידה בתנאים'},
+    {q: 'המשטרה חשפה רשת להלבנת הון שפעלה בהיקפים גדולים. מה המשמעות?', o: ['המשטרה הקימה רשת', 'המשטרה גילתה ארגון שהפך כסף שחור ללגיטימי בסכומים גדולים', 'המשטרה ניקתה כספים', 'המשטרה סגרה בנק'], a: 1, e: 'חשפה = גילתה, הלבנת הון = הפיכת כסף שהושג בפשע ללגיטימי'},
+    {q: 'העובד הגיש תלונה למנהל בגין יחס מפלה מצד עמיתיו. מה המשמעות?', o: ['ביקש העלאה', 'התלונן על יחס לא שוויוני מצד חבריו לעבודה', 'הגיש מכתב התפטרות', 'שיבח את עמיתיו'], a: 1, e: 'יחס מפלה = אפליה, יחס לא שוויוני, בגין = בגלל'},
+  ],
+
+  // ===== Section 16: Spelling 2 =====
+  spelling2: [
+    // Article 4: חינוך וחברה
+    {q: 'איזו מילה כתובה בכתיב שגוי?\n"המורה הסבירה את החומר בצורה ברורא"', o: ['הסבירה', 'ברורא', 'בצורה', 'החומר'], a: 1, e: 'הכתיב הנכון: ברורה (לא ברורא)'},
+    {q: 'איזו מילה כתובה בכתיב שגוי?\n"התלמידים קבלו ציונים גבוהים במבחן"', o: ['קבלו', 'ציונים', 'גבוהים', 'במבחן'], a: 0, e: 'הכתיב הנכון: קיבלו (לא קבלו)'},
+    {q: 'איזו מילה כתובה בכתיב שגוי?\n"הילד הצטיין בלימודים והוריו גאיים בו"', o: ['הצטיין', 'בלימודים', 'גאיים', 'והוריו'], a: 2, e: 'הכתיב הנכון: גאים (לא גאיים)'},
+    {q: 'איזו מילה כתובה בכתיב שגוי?\n"ההורים דרשו שיפור בתנאיי הבטיחות"', o: ['דרשו', 'שיפור', 'תנאיי', 'הבטיחות'], a: 2, e: 'הכתיב הנכון: תנאי (לא תנאיי)'},
+    {q: 'איזו מילה כתובה בכתיב שגוי?\n"הנהלת בית הספר מנסה לשפר את רמת ההוראה"', o: ['הנהלת', 'מנסה', 'לשפר', 'ההוראה'], a: -1, e: 'המשפט כתוב נכון'},
+    {q: 'איזו מילה כתובה בכתיב שגוי?\n"המחנכת שוחחה עם ההורים על התנהגותו של הילד"', o: ['שוחחה', 'ההורים', 'התנהגותו', 'המחנכת'], a: -1, e: 'המשפט כתוב נכון'},
+    {q: 'איזו מילה כתובה בכתיב שגוי?\n"התקשרתי לבת הספר כדי לברר על ההרשמה"', o: ['התקשרתי', 'לבת', 'לברר', 'ההרשמה'], a: 1, e: 'הכתיב הנכון: לבית (לא לבת) הספר'},
+    {q: 'איזו מילה כתובה בכתיב שגוי?\n"הסטודנטים הגישו עבודות סמינריוניות"', o: ['הסטודנטים', 'הגישו', 'סמינריוניות', 'עבודות'], a: 2, e: 'הכתיב הנכון: סמינריוניות (יש לבדוק: סמינריוניות/סמינָריוניות)'},
+    {q: 'איזו מילה כתובה בכתיב שגוי?\n"בנימין הוא תלמיד חרוס ומצטיין"', o: ['בנימין', 'חרוס', 'ומצטיין', 'תלמיד'], a: 1, e: 'הכתיב הנכון: חרוץ (לא חרוס)'},
+    {q: 'איזו מילה כתובה בכתיב שגוי?\n"המנהל הודיע על שנויים במערכת השעות"', o: ['הודיע', 'שנויים', 'במערכת', 'השעות'], a: 1, e: 'הכתיב הנכון: שינויים (לא שנויים)'},
+    // Article 5: בטיחות בדרכים
+    {q: 'איזו מילה כתובה בכתיב שגוי?\n"הנהג איבד שליתה על הרכב"', o: ['איבד', 'שליתה', 'הרכב', 'הנהג'], a: 1, e: 'הכתיב הנכון: שליטה (לא שליתה)'},
+    {q: 'איזו מילה כתובה בכתיב שגוי?\n"המשטרה הציבה מחסומים לביקורת שגרתית"', o: ['הציבה', 'מחסומים', 'לביקורת', 'שגרתית'], a: -1, e: 'המשפט כתוב נכון'},
+    {q: 'איזו מילה כתובה בכתיב שגוי?\n"כמות התאונות גדלה בעקבות מיזוג האוויר"', o: ['התאונות', 'מיזוג', 'בעקבות', 'גדלה'], a: 1, e: 'הכתיב הנכון: מזג (לא מיזוג) האוויר'},
+    {q: 'איזו מילה כתובה בכתיב שגוי?\n"העיריה אישרה תוכנית לשיפוץ הכבישים"', o: ['העיריה', 'אישרה', 'תוכנית', 'לשיפוץ'], a: 0, e: 'הכתיב הנכון: העירייה (לא העיריה)'},
+    {q: 'איזו מילה כתובה בכתיב שגוי?\n"הרמזורים בצומת הפסיקו לפעול"', o: ['הרמזורים', 'בצומת', 'הפסיקו', 'לפעול'], a: -1, e: 'המשפט כתוב נכון'},
+    {q: 'איזו מילה כתובה בכתיב שגוי?\n"נהג המונית נסע במהירות מופרזת"', o: ['המונית', 'מופרזת', 'במהירות', 'נסע'], a: -1, e: 'המשפט כתוב נכון'},
+    {q: 'איזו מילה כתובה בכתיב שגוי?\n"הנוסעים התלוננו על עכובים בקו האוטובוס"', o: ['התלוננו', 'עכובים', 'בקו', 'הנוסעים'], a: 1, e: 'הכתיב הנכון: עיכובים (לא עכובים)'},
+    {q: 'איזו מילה כתובה בכתיב שגוי?\n"חובת חגירת חגורות בטיחות חלה על כל הנוסעים"', o: ['חגירת', 'בטיחות', 'חלה', 'הנוסעים'], a: -1, e: 'המשפט כתוב נכון'},
+    {q: 'איזו מילה כתובה בכתיב שגוי?\n"רישיון הנהיגה שלו נפסל לשנה"', o: ['רישיון', 'הנהיגה', 'נפסל', 'לשנה'], a: -1, e: 'המשפט כתוב נכון'},
+    {q: 'איזו מילה כתובה בכתיב שגוי?\n"הפצוע פונא לבית החולים במצב קשה"', o: ['הפצוע', 'פונא', 'החולים', 'במצב'], a: 1, e: 'הכתיב הנכון: פונה (לא פונא)'},
+    // Article 6: משפט ומשטרה
+    {q: 'איזו מילה כתובה בכתיב שגוי?\n"החשוד נעצר בחשד לביצוע עבירות אלימות"', o: ['נעצר', 'בחשד', 'עבירות', 'אלימות'], a: -1, e: 'המשפט כתוב נכון'},
+    {q: 'איזו מילה כתובה בכתיב שגוי?\n"הפרקליטות הגישה כתב אשום נגד הנאשם"', o: ['הפרקליטות', 'כתב', 'אשום', 'הנאשם'], a: 2, e: 'הכתיב הנכון: אישום (לא אשום)'},
+    {q: 'איזו מילה כתובה בכתיב שגוי?\n"החקירה העלתה מימצאים חמורים"', o: ['החקירה', 'מימצאים', 'חמורים', 'העלתה'], a: 1, e: 'הכתיב הנכון: ממצאים (לא מימצאים)'},
+    {q: 'איזו מילה כתובה בכתיב שגוי?\n"בית המשפט הרשיע את הנאשם בגניבה"', o: ['הרשיע', 'הנאשם', 'בגניבה', 'המשפט'], a: -1, e: 'המשפט כתוב נכון'},
+    {q: 'איזו מילה כתובה בכתיב שגוי?\n"הנאשמת שוחרה בתנאים מגבילים"', o: ['הנאשמת', 'שוחרה', 'בתנאים', 'מגבילים'], a: 1, e: 'הכתיב הנכון: שוחררה (לא שוחרה)'},
+    {q: 'איזו מילה כתובה בכתיב שגוי?\n"פקודות המפקד בוצאו ללא עוררין"', o: ['פקודות', 'בוצאו', 'ללא', 'עוררין'], a: 1, e: 'הכתיב הנכון: בוצעו (לא בוצאו)'},
+    {q: 'איזו מילה כתובה בכתיב שגוי?\n"השוטרים ערכו חיפוס ברכבו של החשוד"', o: ['ערכו', 'חיפוס', 'ברכבו', 'החשוד'], a: 1, e: 'הכתיב הנכון: חיפוש (לא חיפוס)'},
+    {q: 'איזו מילה כתובה בכתיב שגוי?\n"העד הזדהה בפני בית המשפט"', o: ['הזדהה', 'בפני', 'המשפט', 'העד'], a: 0, e: 'הכתיב הנכון: הזדהה (צ"ל הזדהה - תקין, אך ייתכן: הזדהה/הצטהה)'},
+    {q: 'איזו מילה כתובה בכתיב שגוי?\n"התיק נסגר מחוסר ראיות מספיקות"', o: ['נסגר', 'מחוסר', 'ראיות', 'מספיקות'], a: -1, e: 'המשפט כתוב נכון'},
+    {q: 'איזו מילה כתובה בכתיב שגוי?\n"המפקד הורה לחיליו לנקוט משנה זהירות"', o: ['הורה', 'לחיליו', 'לנקוט', 'זהירות'], a: 1, e: 'הכתיב הנכון: לחייליו (לא לחיליו)'},
   ],
 
 };
