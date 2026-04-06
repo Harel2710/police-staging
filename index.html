@@ -590,6 +590,78 @@ Google
 </div>
 </div>
 
+<!-- PROFILE SETUP -->
+<div id="profile-screen" class="screen">
+<div class="login-container" style="max-width:420px">
+<button class="back-btn" id="profile-back-btn" onclick="showMore()" style="display:none;position:absolute;top:calc(var(--st) + 12px);right:16px;z-index:10">→ חזרה</button>
+<div class="login-badge">🛡️</div>
+<h1 class="login-title">פרופיל משתמש</h1>
+<p class="login-desc" style="margin-bottom:16px">בחר את הסטטוס שלך</p>
+<div id="profile-role-picker" style="display:flex;gap:10px;margin-bottom:16px">
+<button class="btn btn-secondary profile-role-btn" id="profile-role-active" onclick="selectProfileRole('active')" style="flex:1;padding:16px 10px;font-size:14px;font-weight:700">👮 שוטר פעיל</button>
+<button class="btn btn-secondary profile-role-btn" id="profile-role-trainee" onclick="selectProfileRole('trainee')" style="flex:1;padding:16px 10px;font-size:14px;font-weight:700">🎓 חניך בהכשרה</button>
+</div>
+<div id="profile-active-fields" class="hidden" style="display:none">
+<div class="login-form">
+<label style="font-size:13px;font-weight:600;color:var(--txts);text-align:right;margin-bottom:-4px">מחוז / אגף</label>
+<select id="profile-district" style="padding:13px 16px;border:1.5px solid var(--brd);border-radius:var(--r-md);background:var(--card2);color:var(--txt);font-size:14px;font-family:var(--font);outline:none;direction:rtl">
+<option value="">בחר מחוז / אגף</option>
+<option value="מחוז תל אביב">מחוז תל אביב</option>
+<option value="מחוז מרכז">מחוז מרכז</option>
+<option value="מחוז ירושלים">מחוז ירושלים</option>
+<option value="מחוז צפון">מחוז צפון</option>
+<option value="מחוז חוף">מחוז חוף</option>
+<option value="מחוז דרום">מחוז דרום</option>
+<option value='מחוז ש"י'>מחוז ש"י</option>
+<option value="אגף חקירות ומודיעין">אגף חקירות ומודיעין</option>
+<option value="אגף משאבי אנוש">אגף משאבי אנוש</option>
+<option value='את"ל'>את"ל</option>
+<option value='אג"ת'>אג"ת</option>
+<option value="אגף התנועה">אגף התנועה</option>
+<option value="משמר הגבול">משמר הגבול</option>
+<option value='מתפ"א'>מתפ"א</option>
+<option value="להב 433">להב 433</option>
+<option value="אחר">אחר</option>
+</select>
+<label style="font-size:13px;font-weight:600;color:var(--txts);text-align:right;margin-bottom:-4px">יחידה / תחנה</label>
+<input type="text" id="profile-unit" placeholder="שם יחידה / פלוגה / תחנה" maxlength="50" dir="rtl">
+</div>
+</div>
+<div id="profile-trainee-fields" class="hidden" style="display:none">
+<div class="login-form">
+<label style="font-size:13px;font-weight:600;color:var(--txts);text-align:right;margin-bottom:-4px">פלוגה</label>
+<select id="profile-platoon" style="padding:13px 16px;border:1.5px solid var(--brd);border-radius:var(--r-md);background:var(--card2);color:var(--txt);font-size:14px;font-family:var(--font);outline:none;direction:rtl">
+<option value="">בחר פלוגה</option>
+<option value="פלוגת הדר">פלוגת הדר</option>
+<option value="פלוגת עוז">פלוגת עוז</option>
+<option value="פלוגת יעל">פלוגת יעל</option>
+<option value="פלוגת דוד">פלוגת דוד</option>
+<option value="פלוגת דקל">פלוגת דקל</option>
+<option value="פלוגת דרור">פלוגת דרור</option>
+<option value="פלוגת דולב">פלוגת דולב</option>
+<option value="אחר">אחר</option>
+</select>
+<label style="font-size:13px;font-weight:600;color:var(--txts);text-align:right;margin-bottom:-4px">מחזור</label>
+<select id="profile-cohort" style="padding:13px 16px;border:1.5px solid var(--brd);border-radius:var(--r-md);background:var(--card2);color:var(--txt);font-size:14px;font-family:var(--font);outline:none;direction:rtl">
+<option value="">בחר מחזור</option>
+<option value="מחזור מרץ 2026">מחזור מרץ 2026</option>
+<option value="מחזור אוגוסט 2026">מחזור אוגוסט 2026</option>
+<option value="מחזור נובמבר 2026">מחזור נובמבר 2026</option>
+<option value="מחזור מרץ 2027">מחזור מרץ 2027</option>
+<option value="מחזור אוגוסט 2027">מחזור אוגוסט 2027</option>
+<option value="מחזור נובמבר 2027">מחזור נובמבר 2027</option>
+<option value="מחזור מרץ 2028">מחזור מרץ 2028</option>
+<option value="מחזור אוגוסט 2028">מחזור אוגוסט 2028</option>
+<option value="מחזור נובמבר 2028">מחזור נובמבר 2028</option>
+<option value="אחר">אחר</option>
+</select>
+</div>
+</div>
+<p id="profile-error" class="error-msg"></p>
+<button class="btn btn-primary" id="profile-save-btn" onclick="saveProfile()" style="margin-top:14px;padding:14px;font-size:15px;font-weight:700;width:100%;display:none">שמור והמשך</button>
+</div>
+</div>
+
 <!-- HOME (Path + Stats) -->
 <div id="dash-screen" class="screen">
 <header class="dash-title-bar">
@@ -636,6 +708,11 @@ Google
 <div class="stat-card glass"><div class="stat-val" id="s-done">0</div><div class="stat-lbl">שיעורים</div></div>
 <div class="stat-card glass"><div class="stat-val" id="s-progress">0%</div><div class="stat-lbl">התקדמות</div></div>
 <div class="stat-card glass"><div class="stat-val" id="s-time">0</div><div class="stat-lbl">דקות</div></div>
+</div>
+<div id="profile-display" class="glass" style="padding:14px;margin-bottom:16px;font-size:13px;line-height:1.8;border-radius:var(--r-md)">
+<div style="font-weight:700;margin-bottom:4px">🛡️ פרטי שיוך</div>
+<div id="profile-display-content" style="color:var(--txts)"></div>
+<button class="btn btn-secondary" onclick="editProfile()" style="margin-top:8px;font-size:12px;padding:6px 14px">עריכת פרופיל</button>
 </div>
 <div class="action-cards">
 <div class="action-card glass" id="lb-btn"><span class="action-icon">🏆</span><div style="flex:1"><span class="action-text">טבלת דירוג</span></div><span class="action-arrow">←</span></div>
@@ -968,9 +1045,9 @@ const USER_TYPES=[
   {id:'trainee',label:'חניך בהכשרה',icon:'🎓'}
 ];
 const DEFAULT_LB_CONFIG={
-  districts:['מחוז תל אביב','מחוז מרכז','מחוז ירושלים','מחוז צפון','מחוז חוף (חיפה)','מחוז דרום','מחוז יו"ש','אגף החקירות והמודיעין','אגף התנועה','מג"ב','יס"מ','להב 433','ימ"ר','יח\' סייבר'],
-  traineeCompanies:['פלוגה א\'','פלוגה ב\'','פלוגה ג\'','פלוגה ד\'','פלוגה ה\'','פלוגה ו\''],
-  traineeCohorts:['מחזור 1/2025','מחזור 2/2025','מחזור 3/2025','מחזור 1/2026','מחזור 2/2026','מחזור 3/2026']
+  districts:['מחוז תל אביב','מחוז מרכז','מחוז ירושלים','מחוז צפון','מחוז חוף','מחוז דרום','מחוז ש"י','אגף חקירות ומודיעין','אגף משאבי אנוש','את"ל','אג"ת','אגף התנועה','משמר הגבול','מתפ"א','להב 433'],
+  traineeCompanies:['פלוגת הדר','פלוגת עוז','פלוגת יעל','פלוגת דוד','פלוגת דקל','פלוגת דרור','פלוגת דולב'],
+  traineeCohorts:['מחזור מרץ 2026','מחזור אוגוסט 2026','מחזור נובמבר 2026','מחזור מרץ 2027','מחזור אוגוסט 2027','מחזור נובמבר 2027','מחזור מרץ 2028','מחזור אוגוסט 2028','מחזור נובמבר 2028']
 };
 const getLBConfig=()=>{try{return{...DEFAULT_LB_CONFIG,...JSON.parse(localStorage.getItem('pApp_lbConfig')||'{}')}}catch{return DEFAULT_LB_CONFIG}};
 const saveLBConfig=c=>localStorage.setItem('pApp_lbConfig',JSON.stringify(c));
@@ -1015,7 +1092,8 @@ function syncUserToFirestore(u){
       created:u.created||Date.now(),
       quizResults:u.quizResults||{},
       classification:u.classification||null,
-      isAdmin:u.isAdmin||false
+      isAdmin:u.isAdmin||false,
+      profile:u.profile||null
     };
     db.collection('users').doc(docId).set(doc,{merge:true}).then(()=>{
       console.log('Firestore synced:',u.name);
@@ -1065,12 +1143,13 @@ function mergeFirestoreUser(firestoreData,localUser){
   if(firestoreData.totalTime>merged.totalTime)merged.totalTime=firestoreData.totalTime;
   if(firestoreData.classification&&!merged.classification)merged.classification=firestoreData.classification;
   if(firestoreData.isAdmin)merged.isAdmin=true;
+  if(firestoreData.profile&&!merged.profile)merged.profile=firestoreData.profile;
   return merged;
 }
 
 // ===== UTILITY =====
 const shuffle=a=>{const b=[...a];for(let i=b.length-1;i>0;i--){const j=0|Math.random()*(i+1);[b[i],b[j]]=[b[j],b[i]]}return b};
-const NO_TAB_SCREENS=['login-screen','quiz-screen','sim-screen','lesson-screen','results-screen','sim-results-screen','sim-review-screen','flashcard-screen'];
+const NO_TAB_SCREENS=['login-screen','profile-screen','quiz-screen','sim-screen','lesson-screen','results-screen','sim-results-screen','sim-review-screen','flashcard-screen'];
 const showScreen=id=>{document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));const el=document.getElementById(id);el.classList.add('active');el.scrollTo(0,0);window.scrollTo(0,0);const tb=document.getElementById('tab-bar');if(tb)tb.style.display=(!NO_TAB_SCREENS.includes(id)&&user)?'flex':'none'};
 const toast=(m,t='')=>{const c=document.getElementById('toast-box'),e=document.createElement('div');e.className=`toast ${t}`;e.textContent=m;c.appendChild(e);setTimeout(()=>e.remove(),3000)};
 const fmtTime=s=>(0|s/60).toString().padStart(2,'0')+':'+String(s%60).padStart(2,'0');
@@ -1155,9 +1234,15 @@ function enterApp(uid,displayName,email){
     u.firebaseUid=uid;
     const finishEntry=()=>{
       user=u;saveUser(user);
-      localStorage.setItem('pApp_last',uid);showDash();startTimeTracking();
-      document.getElementById('report-fab').style.display='flex';
-      toggleAdminFab();
+      localStorage.setItem('pApp_last',uid);
+      if(!u.profile){
+        document.getElementById('profile-back-btn').style.display='none';
+        showScreen('profile-screen');
+      } else {
+        showDash();startTimeTracking();
+        document.getElementById('report-fab').style.display='flex';
+        toggleAdminFab();
+      }
     };
     if(db){
       db.collection('users').doc(uid).get().then(doc=>{
@@ -1182,6 +1267,60 @@ function logout(){
   ['login-email','login-password','reg-name','reg-email','reg-password'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
   if(firebaseReady){try{firebase.auth().signOut()}catch(e){}}
   showScreen('login-screen');
+}
+
+// ===== PROFILE SETUP =====
+let _profileRole=null;
+function selectProfileRole(role){
+  _profileRole=role;
+  document.querySelectorAll('.profile-role-btn').forEach(b=>{b.classList.remove('btn-primary');b.classList.add('btn-secondary')});
+  const btn=document.getElementById('profile-role-'+role);
+  btn.classList.remove('btn-secondary');btn.classList.add('btn-primary');
+  const af=document.getElementById('profile-active-fields');
+  const tf=document.getElementById('profile-trainee-fields');
+  const sb=document.getElementById('profile-save-btn');
+  if(role==='active'){
+    af.classList.remove('hidden');af.style.display='';
+    tf.classList.add('hidden');tf.style.display='none';
+  } else {
+    tf.classList.remove('hidden');tf.style.display='';
+    af.classList.add('hidden');af.style.display='none';
+  }
+  sb.style.display='';
+  document.getElementById('profile-error').textContent='';
+}
+
+function saveProfile(){
+  const errEl=document.getElementById('profile-error');
+  if(!_profileRole){errEl.textContent='בחר סטטוס';return}
+  let profile={role:_profileRole};
+  if(_profileRole==='active'){
+    const district=document.getElementById('profile-district').value;
+    const unit=(document.getElementById('profile-unit').value||'').trim();
+    if(!district){errEl.textContent='בחר מחוז / אגף';return}
+    profile.district=district;
+    profile.unit=unit;
+  } else {
+    const platoon=document.getElementById('profile-platoon').value;
+    const cohort=document.getElementById('profile-cohort').value;
+    if(!platoon){errEl.textContent='בחר פלוגה';return}
+    if(!cohort){errEl.textContent='בחר מחזור';return}
+    profile.platoon=platoon;
+    profile.cohort=cohort;
+  }
+  if(!user){errEl.textContent='שגיאה: משתמש לא מחובר';return}
+  user.profile=profile;
+  // Auto-set classification for leaderboard
+  if(profile.role==='active'){
+    user.classification={type:'officer',district:profile.district,unit:profile.unit||''};
+  } else {
+    user.classification={type:'trainee',company:profile.platoon,cohort:profile.cohort};
+  }
+  saveUser(user);
+  showDash();startTimeTracking();
+  document.getElementById('report-fab').style.display='flex';
+  toggleAdminFab();
+  toast('הפרופיל נשמר!');
 }
 
 // ===== FIREBASE AUTH =====
@@ -1245,7 +1384,44 @@ function showMore(){
   document.getElementById('admin-reports-btn').style.display=user.isAdmin?'flex':'none';
   document.getElementById('admin-lb-config-btn').style.display=user.isAdmin?'flex':'none';
   document.getElementById('admin-push-overrides-btn').style.display=user.isAdmin?'flex':'none';
+  // Profile display
+  const pDisp=document.getElementById('profile-display-content');
+  const pCard=document.getElementById('profile-display');
+  if(user.profile){
+    pCard.style.display='';
+    const p=user.profile;
+    if(p.role==='active'){
+      pDisp.innerHTML=`<div>סטטוס: <strong>שוטר פעיל</strong></div><div>מחוז/אגף: <strong>${p.district||'--'}</strong></div>${p.unit?`<div>יחידה: <strong>${p.unit}</strong></div>`:''}`;
+    } else {
+      pDisp.innerHTML=`<div>סטטוס: <strong>חניך בהכשרה</strong></div><div>פלוגה: <strong>${p.platoon||'--'}</strong></div><div>מחזור: <strong>${p.cohort||'--'}</strong></div>`;
+    }
+  } else {
+    pCard.style.display='';
+    pDisp.innerHTML='<div style="color:var(--txtm)">לא הוגדר פרופיל</div>';
+  }
   showScreen('more-screen');
+}
+
+function editProfile(){
+  _profileRole=null;
+  document.querySelectorAll('.profile-role-btn').forEach(b=>{b.classList.remove('btn-primary');b.classList.add('btn-secondary')});
+  document.getElementById('profile-active-fields').style.display='none';
+  document.getElementById('profile-trainee-fields').style.display='none';
+  document.getElementById('profile-save-btn').style.display='none';
+  document.getElementById('profile-error').textContent='';
+  document.getElementById('profile-back-btn').style.display='';
+  if(user&&user.profile){
+    const p=user.profile;
+    selectProfileRole(p.role);
+    if(p.role==='active'){
+      document.getElementById('profile-district').value=p.district||'';
+      document.getElementById('profile-unit').value=p.unit||'';
+    } else {
+      document.getElementById('profile-platoon').value=p.platoon||'';
+      document.getElementById('profile-cohort').value=p.cohort||'';
+    }
+  }
+  showScreen('profile-screen');
 }
 
 // ===== READINESS =====
@@ -3053,8 +3229,13 @@ function init(){
   if(last&&getUser(last)){
     user=getUser(last);if(!user.quizResults)user.quizResults={};
     user.lastActive=Date.now();saveUser(user);
-    showDash();startTimeTracking();
-    document.getElementById('report-fab').style.display='flex';toggleAdminFab();
+    if(!user.profile){
+      document.getElementById('profile-back-btn').style.display='none';
+      showScreen('profile-screen');
+    } else {
+      showDash();startTimeTracking();
+      document.getElementById('report-fab').style.display='flex';toggleAdminFab();
+    }
   } else if(firebaseReady){
     const loginBtn=document.getElementById('google-login-btn');
     const origText=loginBtn?.innerHTML;
