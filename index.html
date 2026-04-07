@@ -3502,16 +3502,50 @@ function showAdminReports(){
   showScreen('admin-reports-screen');
 
   // Fetch from Firestore if available, fallback to localStorage
+  const getReportQKey=(r)=>{
+    if(!r.ref)return null;
+    if(r.ref.type==='quiz'){
+      const sk=r.ref.srcKey||r.ref.dataKey;
+      const si=r.ref.srcIdx!==undefined?r.ref.srcIdx:r.ref.qIdx;
+      return sk?(sk+':'+si):null;
+    }
+    if(r.ref.type==='sim'){
+      const sk=r.ref.srcKey||r.ref.simKey;
+      const si=r.ref.srcIdx!==undefined?r.ref.srcIdx:r.ref.qIdx;
+      return sk?(sk+':'+si):null;
+    }
+    return null;
+  };
+
   const renderReports=(reports,source)=>{
     const active=reports.filter(r=>!r.handled);
     const handled=reports.filter(r=>r.handled);
     if(!active.length&&!handled.length){list.innerHTML='<div class="no-data-msg">אין פניות עדיין</div>';return}
     let html='';
     if(active.length){
-      html+='<div style="font-size:13px;font-weight:700;color:var(--pl);margin-bottom:8px">פניות פעילות ('+active.length+')</div>';
-      active.sort((a,b)=>(b.timestamp||0)-(a.timestamp||0)).forEach(r=>{
-        html+=renderReportItem(r,source,false);
+      // Group active reports by question key
+      const groups=new Map();
+      const ungrouped=[];
+      active.sort((a,b)=>(b.timestamp||0)-(a.timestamp||0));
+      active.forEach(r=>{
+        const qk=getReportQKey(r);
+        if(qk){
+          if(!groups.has(qk))groups.set(qk,[]);
+          groups.get(qk).push(r);
+        }else{ungrouped.push(r)}
       });
+      const totalGroups=groups.size+ungrouped.length;
+      html+='<div style="font-size:13px;font-weight:700;color:var(--pl);margin-bottom:8px">פניות פעילות ('+active.length+(groups.size?' | '+totalGroups+' נושאים':'')+')</div>';
+      // Render grouped reports first (sorted by count desc, then newest)
+      const sortedGroups=[...groups.entries()].sort((a,b)=>b[1].length-a[1].length||(b[1][0].timestamp||0)-(a[1][0].timestamp||0));
+      sortedGroups.forEach(([qk,items])=>{
+        if(items.length>=2){
+          html+=renderReportGroup(qk,items,source);
+        }else{
+          html+=renderReportItem(items[0],source,false);
+        }
+      });
+      ungrouped.forEach(r=>{html+=renderReportItem(r,source,false)});
     }
     if(handled.length){
       html+='<div style="font-size:13px;font-weight:700;color:var(--txtm);margin:16px 0 8px;cursor:pointer" onclick="this.nextElementSibling.classList.toggle(\'hidden\')">טופלו ('+handled.length+') ▾</div>';
@@ -3538,9 +3572,46 @@ function showAdminReports(){
   }
 }
 
-function renderReportItem(r,source,isHandled){
+function renderReportGroup(qk,items,source){
+  const r0=items[0];
+  const ek=r0.ref.srcKey||r0.ref.dataKey||r0.ref.simKey;
+  const ei=r0.ref.srcIdx!==undefined?r0.ref.srcIdx:(r0.ref.qIdx||0);
+  const locLabel=r0.ref.type==='sim'?('סימולציה: '+(r0.ref.simCat==='hebrew'?'עברית':'דפ"ר')):('לומדה: '+(r0.ref.stepTitle||r0.ref.stepId||qk));
+  const docIds=items.filter(r=>r._docId).map(r=>r._docId);
+  let html=`<div class="glass" style="padding:14px;margin-bottom:10px;border-right:3px solid #f59e0b">`;
+  // Group header
+  html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">`;
+  html+=`<div style="display:flex;align-items:center;gap:8px"><span style="background:#f59e0b;color:#000;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px">${items.length} דיווחים</span>`;
+  html+=`<span style="font-size:12px;font-weight:600;color:var(--txt)">${locLabel}</span></div>`;
+  html+=`<code style="font-size:11px;color:var(--txtm)">${qk}</code></div>`;
+  // Edit button at group level
+  if(ek)html+=`<button class="btn" style="width:100%;font-size:13px;padding:8px 14px;margin-bottom:10px;background:rgba(99,102,241,.15);color:var(--pl);border:1px solid rgba(99,102,241,.3);border-radius:var(--r-sm);font-weight:600" onclick="openQuestionEditor('${ek}',${ei})">📦 ערוך שאלה מהמאגר</button>`;
+  // Individual reports (compact)
+  items.forEach(r=>{html+=renderReportItem(r,source,false,true)});
+  // Mark all handled
+  if(docIds.length>1){
+    html+=`<button class="btn" style="width:100%;margin-top:8px;font-size:12px;padding:8px 14px;background:rgba(34,197,94,.12);color:#22c55e;border:1px solid rgba(34,197,94,.3);border-radius:var(--r-sm);font-weight:600" onclick="markAllReportsHandled([${docIds.map(d=>"'"+d+"'").join(',')}],this)">סמן הכל כטופל ✓</button>`;
+  }
+  html+=`</div>`;
+  return html;
+}
+
+function renderReportItem(r,source,isHandled,compact){
   const date=new Date(r.timestamp);
   const dateStr=date.toLocaleDateString('he-IL')+' '+date.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+  if(compact){
+    // Compact sub-item inside a group
+    let html=`<div style="padding:8px 10px;margin-bottom:6px;background:rgba(255,255,255,.03);border-radius:var(--r-sm);border:1px solid var(--brd)">`;
+    html+=`<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--txtm);margin-bottom:4px"><span>👤 ${r.user}</span><span>${dateStr}</span></div>`;
+    html+=`<div style="font-size:13px;line-height:1.5">${r.text}</div>`;
+    if(r.context)html+=`<div style="font-size:11px;color:var(--txtm);margin-top:4px">${r.context}</div>`;
+    if(!isHandled&&r._docId){
+      html+=`<button class="btn" style="margin-top:6px;font-size:10px;padding:3px 10px;background:rgba(34,197,94,.1);color:#22c55e;border:1px solid rgba(34,197,94,.2)" onclick="markReportHandled('${r._docId}',this)">סמן כטופל ✓</button>`;
+    }
+    html+=`</div>`;
+    return html;
+  }
+  // Full report item (ungrouped or handled)
   let html=`<div class="glass report-item" style="${isHandled?'opacity:.5':''}"><div class="report-meta"><span>👤 ${r.user}</span><span>${dateStr}</span></div>`;
   html+=`<div class="report-text">${r.text}</div>`;
   if(r.context)html+=`<div class="report-context">${r.context}</div>`;
@@ -3560,7 +3631,7 @@ function renderReportItem(r,source,isHandled){
     }
     refHTML+='</div>';
     html+=refHTML;
-    // Edit question button - prominent, outside ref block
+    // Edit question button
     if(r.ref.type==='quiz'||r.ref.type==='sim'){
       const ek=r.ref.srcKey||r.ref.dataKey||r.ref.simKey;
       const ei=r.ref.srcIdx!==undefined?r.ref.srcIdx:(r.ref.qIdx||0);
@@ -3588,6 +3659,23 @@ function seedUserCount(){
       toast('✓ מונה עודכן: '+count+' משתמשים');
     });
   }).catch(e=>toast('שגיאה: '+e.message));
+}
+
+function markAllReportsHandled(docIds,btn){
+  if(!db||!docIds.length)return;
+  btn.disabled=true;btn.textContent='מעדכן...';
+  const batch=db.batch();
+  docIds.forEach(id=>{
+    batch.update(db.collection('reports').doc(id),{handled:true,handledAt:Date.now(),handledBy:user?user.name:'admin'});
+  });
+  batch.commit().then(()=>{
+    toast(docIds.length+' דיווחים סומנו כטופלו');
+    showAdminReports();
+  }).catch(e=>{
+    console.warn('Batch mark handled failed:',e);
+    btn.disabled=false;btn.textContent='סמן הכל כטופל ✓';
+    toast('שגיאה בעדכון');
+  });
 }
 
 function markReportHandled(docId,btn){
