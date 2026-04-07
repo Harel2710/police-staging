@@ -12,6 +12,19 @@
 <meta http-equiv="Expires" content="0">
 <link rel="manifest" href="manifest.json">
 <script>
+// Staging gate - only active on staging URL
+(function(){
+  if(location.hostname.indexOf('github.io')!==-1 && location.pathname.indexOf('police-staging')!==-1){
+    var key='_staging_auth';
+    if(sessionStorage.getItem(key)==='ok')return;
+    var pass=prompt('סביבת סטייגינג - הכנס סיסמה:');
+    if(pass!=='david2710'){
+      document.documentElement.innerHTML='<body style="background:#111827;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;direction:rtl"><h2>אין גישה</h2></body>';
+      return;
+    }
+    sessionStorage.setItem(key,'ok');
+  }
+})();
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js')}
 // Auto-refresh when app resumes from background
 (function(){
