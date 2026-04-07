@@ -1072,7 +1072,10 @@ const newUser=n=>({name:n,points:0,completed:[],totalTime:0,lastActive:Date.now(
 let _syncTimer=null;
 let _firestoreUsersCache=null;
 let _firestoreCacheTime=0;
-const FIRESTORE_CACHE_TTL=30000; // 30 seconds
+const FIRESTORE_CACHE_TTL=120000; // 2 minutes
+let _userCountCache=null;
+let _userCountCacheTime=0;
+const USER_COUNT_CACHE_TTL=300000; // 5 minutes
 
 function syncUserToFirestore(u){
   if(!db||!u)return;
@@ -1449,6 +1452,12 @@ function getTotalUserCount(){
   const liveEl=document.getElementById('h-live-count');
   if(el)el.textContent=local;
   if(liveEl)liveEl.textContent='0';
+  // Use cache to avoid excessive Firestore reads
+  if(_userCountCache&&(Date.now()-_userCountCacheTime<USER_COUNT_CACHE_TTL)){
+    if(el)el.textContent=_userCountCache.total;
+    if(liveEl)liveEl.textContent=_userCountCache.live;
+    return;
+  }
   if(db){
     db.collection('users').orderBy('lastActive','desc').limit(300).get().then(snap=>{
       const merged=new Set(Object.keys(getUsers()));
@@ -1461,6 +1470,8 @@ function getTotalUserCount(){
       });
       if(el)el.textContent=merged.size;
       if(liveEl)liveEl.textContent=liveCount;
+      _userCountCache={total:merged.size,live:liveCount};
+      _userCountCacheTime=Date.now();
     }).catch(()=>{});
   }
 }
