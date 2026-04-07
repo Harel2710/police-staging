@@ -193,7 +193,8 @@ function googleLogin(){
     console.error('Google login error:',err);
     if(err.code==='auth/popup-closed-by-user')return;
     if(err.code==='auth/popup-blocked'||err.code==='auth/cancelled-popup-request'){
-      firebase.auth().signInWithRedirect(provider);
+      // Retry popup instead of redirect (redirect breaks on iOS Safari due to storage partitioning)
+      toast('הפופאפ נחסם - נסה שוב או השתמש באימייל');
     } else {
       toast('שגיאה בהתחברות: '+(err.message||err.code));
     }

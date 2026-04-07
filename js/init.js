@@ -59,5 +59,4 @@ function init(){
   obs.observe(document.getElementById('lesson-content'),{childList:true});
 }
 document.addEventListener('DOMContentLoaded',init);
-</script><script>
 
