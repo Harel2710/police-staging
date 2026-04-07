@@ -1,7 +1,7 @@
 // js/state.js - Global state, constants, PATH, LEVELS
 // Auto-extracted from index.html
 
-   APP FRAMEWORK - Police Exam Prep (Glass UI)
+/* APP FRAMEWORK - Police Exam Prep (Glass UI)
    ============================================================ */
 
 // ===== LEARNING PATH =====
