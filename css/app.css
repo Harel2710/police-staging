@@ -485,7 +485,8 @@ body{font-family:var(--font);color:var(--txt);direction:rtl;-webkit-font-smoothi
 /* Medal cards */
 .medals-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-md);padding:var(--sp-lg)}
 .medal-card{position:relative;border-radius:var(--r-lg);padding:20px 14px 14px;text-align:center;transition:var(--tr);border:1.5px solid var(--brd);background:var(--card2);overflow:hidden}
-.medal-card.locked{opacity:.5;filter:grayscale(1)}
+.medal-card.locked{opacity:.6}
+.medal-card.locked .medal-icon{filter:grayscale(1);opacity:.4}
 .medal-card.unlocked{border-color:rgba(99,102,241,.5);box-shadow:0 0 20px rgba(99,102,241,.15)}
 .medal-card.unlocked .medal-icon{animation:medalPulse 2s ease infinite}
 @keyframes medalPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}

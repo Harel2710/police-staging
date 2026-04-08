@@ -268,6 +268,10 @@ function showQBank(){
   document.getElementById('qbank-search').value='';
   renderQBankCategories();
   showScreen('qbank-screen');
+  // Defensive: force hide tab bar and FABs (in case cached utils.js misses qbank-screen)
+  const tb=document.getElementById('tab-bar');if(tb)tb.style.display='none';
+  const rf=document.getElementById('report-fab');if(rf)rf.style.display='none';
+  const af=document.getElementById('admin-edit-fab');if(af)af.style.display='none';
 }
 
 function renderQBankCategories(){
@@ -510,9 +514,14 @@ function showAdminReports(){
   };
 
   if(db){
+    // Use cache if fresh (10 min TTL) to avoid 100 reads every open
+    if(_reportsCache&&(Date.now()-_reportsCacheTime<REPORTS_CACHE_TTL)){
+      renderReports(_reportsCache,'firestore');return;
+    }
     db.collection('reports').orderBy('timestamp','desc').limit(100).get().then(snap=>{
       const reports=[];
       snap.forEach(doc=>{const d=doc.data();d._docId=doc.id;reports.push(d)});
+      _reportsCache=reports;_reportsCacheTime=Date.now();
       renderReports(reports,'firestore');
     }).catch(e=>{
       console.warn('Firestore reports fetch failed:',e);
