@@ -69,8 +69,28 @@ function loadGroupLeaderboard(){
     _lbGroupCache=users;
     renderLBFromCache();
   }).catch(e=>{
-    console.warn('Leaderboard fetch error:',e);
-    list.innerHTML='<div class="no-data-msg">שגיאה בטעינת דירוג. ודא שיש חיבור לאינטרנט.</div>';
+    console.warn('Leaderboard query error:',e);
+    // If composite index missing, Firestore error contains creation URL - log it
+    if(e.message&&e.message.includes('index')){
+      console.error('MISSING INDEX — create it here:',e.message);
+    }
+    // Fallback: fetch all users, filter client-side (works without composite index)
+    db.collection('users').orderBy('points','desc').limit(50).get().then(snap=>{
+      const all=[];
+      snap.forEach(doc=>{const d=doc.data();d._docId=doc.id;all.push(d)});
+      // Filter to user's group client-side
+      const filtered=all.filter(u=>{
+        if(!u.classification)return false;
+        if(group.type==='trainee')return u.classification.type==='trainee'&&u.classification.company===group.company&&u.classification.department===group.department;
+        if(group.type==='officer')return u.classification.type==='officer'&&u.classification.district===group.district;
+        return u.classification.type==='citizen';
+      });
+      _lbGroupCache=filtered.slice(0,30);
+      renderLBFromCache();
+    }).catch(e2=>{
+      console.warn('Leaderboard fallback error:',e2);
+      list.innerHTML='<div class="no-data-msg">שגיאה בטעינת דירוג. ודא שיש חיבור לאינטרנט.</div>';
+    });
   });
 }
 
