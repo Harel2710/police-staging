@@ -493,7 +493,7 @@ body{font-family:var(--font);color:var(--txt);direction:rtl;-webkit-font-smoothi
 .medal-title{font-size:13px;font-weight:700;color:var(--txt);margin-bottom:4px}
 .medal-desc{font-size:11px;color:var(--txtm);line-height:1.4;margin-bottom:8px;min-height:30px}
 .medal-date{font-size:10px;color:var(--pl);font-weight:600}
-.medal-launch{display:inline-block;font-size:11px;padding:5px 14px;background:rgba(99,102,241,.15);color:var(--pl);border:1px solid rgba(99,102,241,.3);border-radius:var(--r-sm);font-weight:600;cursor:pointer;transition:var(--tr)}
+.medal-launch{display:inline-block;font-size:11px;padding:6px 16px;background:rgba(34,197,94,.15);color:#22c55e;border:1px solid rgba(34,197,94,.4);border-radius:var(--r-sm);font-weight:700;cursor:pointer;transition:var(--tr)}
 .medal-launch:active{transform:scale(.95)}
 .medal-section-title{font-size:13px;font-weight:700;color:var(--txtm);padding:var(--sp-md) var(--sp-lg) var(--sp-xs);text-transform:uppercase;letter-spacing:.5px}
 .medal-counter{text-align:center;padding:var(--sp-lg) var(--sp-lg) var(--sp-sm);font-size:15px;font-weight:700;color:var(--txt)}

@@ -60,9 +60,9 @@ function renderMedals(){
       if(unlocked){
         html+=`<div class="medal-date">הושג ${dateStr}</div>`;
       } else if(m.launch){
-        html+=`<div class="medal-launch" onclick="launchMedalTarget('${m.launch}')">שגר →</div>`;
+        html+=`<div class="medal-launch" onclick="launchMedalTarget('${m.launch}')">לנסות עכשיו →</div>`;
       } else {
-        html+=`<div class="medal-launch" onclick="launchMedalTarget('final_${m.cat}')">שגר →</div>`;
+        html+=`<div class="medal-launch" onclick="launchMedalTarget('final_${m.cat}')">לנסות עכשיו →</div>`;
       }
       html+=`</div>`;
     });
@@ -72,17 +72,24 @@ function renderMedals(){
   container.innerHTML=html;
 }
 
+let _launchedFromMedals=false;
+
 function launchMedalTarget(target){
+  _launchedFromMedals=true;
   if(target==='boost'){
     showScreen('boost-screen');
   } else if(target==='final_hebrew'){
-    // Find the final_sim_heb step in PATH and launch it
     const idx=PATH.findIndex(s=>s.id==='final_sim_heb');
     if(idx>=0)openStep(idx);
   } else if(target==='final_dpr'){
     const idx=PATH.findIndex(s=>s.id==='final_sim_dpr');
     if(idx>=0)openStep(idx);
   }
+}
+
+function returnFromMedalLaunch(){
+  if(_launchedFromMedals){_launchedFromMedals=false;showTrophyScreen();return true}
+  return false;
 }
 
 function checkMedals(ctx){

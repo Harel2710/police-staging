@@ -3,7 +3,7 @@
 
 // ===== UTILITY =====
 const shuffle=a=>{const b=[...a];for(let i=b.length-1;i>0;i--){const j=0|Math.random()*(i+1);[b[i],b[j]]=[b[j],b[i]]}return b};
-const NO_TAB_SCREENS=['login-screen','profile-screen','quiz-screen','sim-screen','lesson-screen','results-screen','sim-results-screen','sim-review-screen','flashcard-screen'];
+const NO_TAB_SCREENS=['login-screen','profile-screen','quiz-screen','sim-screen','lesson-screen','results-screen','sim-results-screen','sim-review-screen','flashcard-screen','qbank-screen','admin-reports-screen'];
 const HIDE_FABS_SCREENS=['qbank-screen','admin-reports-screen'];
 const showScreen=id=>{document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));const el=document.getElementById(id);el.classList.add('active');el.scrollTo(0,0);window.scrollTo(0,0);const tb=document.getElementById('tab-bar');if(tb)tb.style.display=(!NO_TAB_SCREENS.includes(id)&&user)?'flex':'none';const hideFabs=HIDE_FABS_SCREENS.includes(id);const rf=document.getElementById('report-fab');const af=document.getElementById('admin-edit-fab');if(rf)rf.style.display=hideFabs?'none':(user?'flex':'none');if(af)af.style.display=hideFabs?'none':(user&&user.isAdmin?'flex':'none')};
 const toast=(m,t='')=>{const c=document.getElementById('toast-box'),e=document.createElement('div');e.className=`toast ${t}`;e.textContent=m;c.appendChild(e);setTimeout(()=>e.remove(),3000)};

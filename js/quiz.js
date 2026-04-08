@@ -182,8 +182,8 @@ function endQuiz(){
     const _bc=boostCat;
     document.getElementById('r-next').textContent='⚡ בוסט נוסף ←';
     document.getElementById('r-next').onclick=()=>{isBoostMode=false;startBoost(_bc==='hebrew'?'hebrew':'dpr')};
-    document.getElementById('r-back').textContent='חזרה למסך ראשי';
-    document.getElementById('r-back').onclick=()=>{isBoostMode=false;showDash()};
+    document.getElementById('r-back').textContent='חזרה';
+    document.getElementById('r-back').onclick=()=>{isBoostMode=false;if(!returnFromMedalLaunch())showDash()};
   } else {
     document.getElementById('r-next').onclick=()=>{
       const curCat=PATH[curStep]?.cat;
@@ -195,7 +195,7 @@ function endQuiz(){
     };
     document.getElementById('r-next').textContent='שלב הבא ←';
     document.getElementById('r-back').textContent='חזרה';
-    document.getElementById('r-back').onclick=()=>showPath();
+    document.getElementById('r-back').onclick=()=>{if(!returnFromMedalLaunch())showPath()};
   }
   isBoostMode=false;
   showScreen('results-screen');
@@ -553,7 +553,7 @@ function showRichSimResults(cat,breakdown,correct,total,pct,grade,pts,isLevel,is
   }
 
   html+=`<div class="results-actions" style="margin-top:14px">
-    <button class="btn btn-primary" onclick="showDash()">חזרה למסלול</button>
+    <button class="btn btn-primary" onclick="if(!returnFromMedalLaunch())showDash()">חזרה למסלול</button>
     <button class="btn btn-secondary" onclick="showSimReview()">סקירת שאלות 🔍</button>
   </div></div>`;
 
